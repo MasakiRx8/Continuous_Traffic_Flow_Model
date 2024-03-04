@@ -1,0 +1,78 @@
+# Compiler specification
+CXX = g++
+# Specifying compiler options
+# Parallel calculation enabled in the lower row
+CXXFLAGS = -Wall -Wextra -Wuninitialized -std=c++11
+#CXXFLAGS = -Wunused -Wuninitialized -std=c++11 -fopenmp
+
+RCXXFLAGS  = $(CXXFLAGS) -O3
+DCXXFLAGS  = $(CXXFLAGS) -O0 -g
+
+# Specifying include directories
+INCDIR = -I./include -I./include/%
+# Specifying a link to a library
+LIBS = -lm
+LDFLAGS =
+# Specifying the extension of the source to be compiled
+EXTENSION = cpp
+# Target name to generate
+RTARGET = release.exe
+DTARGET = debug.exe
+# Output root directory for generate and intermediate binary files
+RTARGETDIR = ./bin/release
+DTARGETDIR = ./bin/debug
+ROBJECTDIR = ./obj/release
+DOBJECTDIR = ./obj/debug
+# Root directory of source files
+SRCROOT = ./SourceFile
+
+INIDIR = ./IniFiles
+# List all files using the foreach command based on the source directory
+SRCS = $(foreach dir, $(SRCROOT), $(wildcard $(dir)/*.$(EXTENSION)))
+# Specify object file names in the same structure as the source directory
+ROBJLIST = $(patsubst $(SRCROOT)/%.o, $(ROBJECTDIR)/%.o, $(patsubst %.$(EXTENSION), %.o, $(SRCS)))
+DOBJLIST = $(patsubst $(SRCROOT)/%.o, $(DOBJECTDIR)/%.o, $(patsubst %.$(EXTENSION), %.o, $(SRCS)))
+
+INIFILES := $(shell ls $(INIDIR))
+
+.PHONY: all build clean alldebug debugbuild debugclean 
+
+all: clean build
+
+build: $(RTARGET)
+
+clean:
+	rm -rf $(ROBJLIST) $(RTARGETDIR)/$(RTARGET)
+
+alldebug: debugclean debugbuild
+
+debugbuild: $(DTARGET)
+
+debugclean:
+	rm -rf $(DOBJLIST) $(DTARGETDIR)/$(DTARGET)
+
+$(RTARGET): $(ROBJLIST)
+	@echo "$^"
+	@if [ ! -e $(RTARGETDIR) ]; then mkdir -p $(RTARGETDIR); fi
+	@if [ ! -e $(RTARGETDIR)/Result ]; then mkdir -p $(RTARGETDIR)/Result; fi
+	rm -rf $(RTARGETDIR)/IniFiles
+	mkdir -p $(RTARGETDIR)/IniFiles
+	cd $(INIDIR); cp $(INIFILES) ../$(RTARGETDIR)/IniFiles
+	$(CXX) -o $(RTARGETDIR)/$@ $^ $(LDFLAGS) $(LIBS)
+
+$(DTARGET): $(DOBJLIST)
+	@echo "$^"
+	@if [ ! -e $(DTARGETDIR) ]; then mkdir -p $(DTARGETDIR); fi
+	@if [ ! -e $(DTARGETDIR)/Result ]; then mkdir -p $(DTARGETDIR)/Result; fi
+	rm -rf $(DTARGETDIR)/IniFiles
+	mkdir -p $(DTARGETDIR)/IniFiles
+	cd $(INIDIR); cp $(INIFILES) ../$(DTARGETDIR)/IniFiles
+	$(CXX) -o $(DTARGETDIR)/$@ $^ $(LDFLAGS) $(LIBS)
+
+$(ROBJECTDIR)/%.o: $(SRCROOT)/%.$(EXTENSION)
+	@if [ ! -e `dirname $@` ]; then mkdir -p `dirname $@`; fi
+	$(CXX) $(RCXXFLAGS) $(INCDIR) -o $@ -c $<
+
+$(DOBJECTDIR)/%.o: $(SRCROOT)/%.$(EXTENSION)
+	@if [ ! -e `dirname $@` ]; then mkdir -p `dirname $@`; fi
+	$(CXX) $(DCXXFLAGS) $(INCDIR) -o $@ -c $<

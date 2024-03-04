@@ -1,4 +1,17 @@
 {
     "cmake.sourceDirectory": "C:/Users/User/Documents/VSCodeGit/Continuous_Traffic_Flow_Model",
-    "makefile.makefilePath": ""
+    "makefile.makePath": "C:\\Program Files (x86)\\GnuWin32\\bin\\make.exe",
+    "makefile.launchConfigurations": [
+        {
+            "cwd": "c:\\Users\\User\\Documents\\VSCodeGit\\Continuous_Traffic_Flow_Model",
+            "binaryPath": "c:\\Users\\User\\Documents\\VSCodeGit\\Continuous_Traffic_Flow_Model\\example.exe",
+            "binaryArgs": []
+        },
+        {
+            "cwd": "c:\\Users\\User\\Documents\\VSCodeGit\\Continuous_Traffic_Flow_Model\\bin\\release",
+            "binaryPath": "c:\\Users\\User\\Documents\\VSCodeGit\\Continuous_Traffic_Flow_Model\\bin\\release\\release.exe",
+            "binaryArgs": []
+        }
+    ],
+    "makefile.makefilePath": "C:\\Users\\User\\Documents\\VSCodeGit\\Continuous_Traffic_Flow_Model\\makefile"
 }

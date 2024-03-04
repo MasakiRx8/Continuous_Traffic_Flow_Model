@@ -1,12 +1,29 @@
 {
     "configurations": [
         {
-            "type": "cmake",
+            "name": "Run binary",
+            "type": "cppdbg",
             "request": "launch",
-            "name": "CMake: プロジェクトの構成",
-            "cmakeDebugType": "configure",
-            "clean": false,
-            "configureAll": false
+            "program": "${workspaceFolder}/bin/debug/debug",
+            "args": [],
+            "stopAtEntry": false,
+            "cwd": "${workspaceFolder}",
+            "environment": [],
+            "externalConsole": false,
+            "MIMode": "gdb",
+            "miDebuggerPath": "C:/MinGW/bin/gdb",
+            "setupCommands": [
+                {
+                    "description": "gdb の再フォーマットを有効にする",
+                    "text": "-enable-pretty-printing",
+                    "ignoreFailures": true
+                },
+                {
+                    "description": "逆アセンブリ フレーバーを Intel に設定",
+                    "text": "-gdb-set disassembly-flavor intel",
+                    "ignoreFailures": true
+                }
+            ]
         }
     ]
 }

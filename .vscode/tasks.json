@@ -1,18 +1,15 @@
 {
+    "version": "2.0.0",
     "tasks": [
         {
-            "type": "cppbuild",
-            "label": "C/C++: g++.exe アクティブなファイルのビルド",
-            "command": "C:/MinGW/bin/g++.exe",
+            "label": "make: all",
+            "type": "shell",
+            "command": "make",
             "args": [
-                "-fdiagnostics-color=always",
-                "-g",
-                "${file}",
-                "-o",
-                "${fileDirname}\\${fileBasenameNoExtension}.exe"
+                "all"
             ],
             "options": {
-                "cwd": "C:/MinGW/bin"
+                "cwd": "${workspaceFolder}/bin/release"
             },
             "problemMatcher": [
                 "$gcc"
@@ -20,9 +17,7 @@
             "group": {
                 "kind": "build",
                 "isDefault": true
-            },
-            "detail": "デバッガーによって生成されたタスク。"
+            }
         }
-    ],
-    "version": "2.0.0"
+    ]
 }

@@ -8,8 +8,8 @@
 
 int main() {
 	int IniFileNum = 54;	//".ini" file number (ex:54.ini)
-	std::string IniFileFolderPath = R"(.\IniFiles)";	//the path to the folder where the ".ini" initialization file is saved
-	std::string ResultFileFolderPath = R"(.\Result)";	//the path to the ".csv" where the results will be written
+	std::string IniFileFolderPath = R"(./IniFiles)";	//the path to the folder where the ".ini" initialization file is saved
+	std::string ResultFileFolderPath = R"(./Result)";	//the path to the ".csv" where the results will be written
 
 	Simulation simulation(IniFileFolderPath, IniFileNum, ResultFileFolderPath);
 	simulation.simulate();
