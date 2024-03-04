@@ -1,4 +1,4 @@
-# Continuous Traffic Flow Model For g++
+# Continuous Traffic Flow Model
 These source codes and series of files are coded for model 
 "A new microscopic traffic-flow model based on spatiotemporal continuous system 
 concept considering non-linear relations between human's response and stimulus"
