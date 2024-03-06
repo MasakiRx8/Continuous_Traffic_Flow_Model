@@ -18,16 +18,16 @@ GRecognitionPackage::~GRecognitionPackage() {
 	Calculated by Eq.(3-5) to (3-7).
 */
 void GRecognitionPackage::CalculateGSerise(const CarStruct* const car) const {
-	const double* const v = &(car->Moment->v);
-	car->Driver->Moment->pedal->t->accelToBrake = PedalChange->GetAccelToBrakeTime(car, *v);	//Calculated by Eq.(3-4).
-	car->Driver->Moment->pedal->t->brakeToAccel = PedalChange->GetBrakeToAccelTime(car, *v);	//Calculated by Eq.(3-4).
+	const double v = car->Moment->v;
+	car->Driver->Moment->pedal->t->accelToBrake = PedalChange->GetAccelToBrakeTime(car, v);	//Calculated by Eq.(3-4).
+	car->Driver->Moment->pedal->t->brakeToAccel = PedalChange->GetBrakeToAccelTime(car, v);	//Calculated by Eq.(3-4).
 	const CarElements::MomentValuesElements::ArroundCarInformations* const front = car->Moment->arround->front;
 	const DriverElements::EigenValuesElements::AccelerationPackage* const A = car->Driver->Eigen->A;
 	const Common::EigenValuesElements::GSerise* const G = car->Driver->Eigen->G;
-	const double* const x = &(car->Moment->x);
-	const double vT = *v * car->Driver->Moment->pedal->t->accelToBrake;
-	const double v2 = 0.5 * pow(*v, 2);
-	const double vf2 = 0.5 * pow(front->v, 2);
+	const double x = car->Moment->x;
+	const double vT = v * car->Driver->Moment->pedal->t->accelToBrake;
+	const double v2 = 0.5 * std::pow(v, 2);
+	const double vf2 = 0.5 * std::pow(front->v, 2);
 	double xFrontRear = front->x - front->Length;
 
 	CarElements::MomentValuesElements::GapSerise* const g = car->Moment->g;
@@ -35,13 +35,13 @@ void GRecognitionPackage::CalculateGSerise(const CarStruct* const car) const {
 	if (xFrontRear < 0) {
 		xFrontRear += L;
 	}
-	g->gap = xFrontRear - *x;
+	g->gap = xFrontRear - x;
 	if (g->gap < 0) {
 		g->gap += L;
 	}
 	g->closest = (std::max)(vT + v2 / A->Deceleration->Strong - vf2 / A->Deceleration->Acceptable + G->Closest, G->Closest);	//Calculated by Eq.(3-5).
 	g->cruise = (std::max)(vT + v2 / A->Deceleration->Normal - vf2 / A->FrontDeceleration->Normal, g->closest + G->Cruise);		//Calculated by Eq.(3-6).
-	g->influenced = (std::max)(g->cruise + *v * GetTMargin(car), g->cruise + G->Influenced);	//Calculated by Eq.(3-7)
+	g->influenced = (std::max)(g->cruise + v * GetTMargin(car), g->cruise + G->Influenced);	//Calculated by Eq.(3-7)
 	g->deltaGap->CopyCurrentToLast();	//Copy deltaGap of current to last  before updating current it.
 	g->deltaGap->current = g->gap - g->cruise;
 }

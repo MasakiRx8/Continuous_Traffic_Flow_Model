@@ -5,10 +5,6 @@
 
 #include "InitializerClass.h"
 
-char InitializerClass::ToLower::operator()(const char& c) {
-	return std::tolower(c);
-}
-
 //constructor
 InitializerClass::InitializerClass(const ModelBaseClass* myBase, const std::string& IniFileFolderPath, const int& IniFileNumber) : ModelBaseClass(myBase) {
 	InitializeProperties(this);
@@ -25,7 +21,12 @@ InitializerClass::~InitializerClass() {
 */
 bool InitializerClass::Initialize() {
 	InitializeCarsAndDrivers();
-	return InitializePosition();
+	bool success = InitializePosition();
+	for (std::size_t i = 0; i < cars->size(); i++) {
+		(*cars)[i]->Moment->UpdateReferences();
+	}
+
+	return success;
 }
 
 /*
@@ -37,7 +38,7 @@ void InitializerClass::InitializeCarsAndDrivers() {
 	std::string sModeType;
 	allDclosest = 0;
 	allCarLength = 0;
-	for (int i = 0; i < N; i++) {
+	for (std::size_t i = 0; i < std::size_t(N); i++) {
 		(*cars)[i] = new CarStruct();
 		//Car
 		CarStruct* const car = (*cars)[i];
@@ -46,9 +47,16 @@ void InitializerClass::InitializeCarsAndDrivers() {
 
 		carE->Vmax = Calculate_Km_h_To_m_s(ReadIniFile->ReadIni("Car Informations", "Vmax"));
 		carE->Amax->Plus = Calculate_Km_h_To_m_s(ReadIniFile->ReadIni("Car Informations", "A^+_max_V")) / ReadIniFile->ReadIni("Car Informations", "A^+_max_s");
-		carE->Amax->Minus = pow(Calculate_Km_h_To_m_s(ReadIniFile->ReadIni("Car Informations", "A^-_max_V")), 2) / 2 / ReadIniFile->ReadIni("Car Informations", "A^-_max_D");
+		carE->Amax->Minus = std::pow(Calculate_Km_h_To_m_s(ReadIniFile->ReadIni("Car Informations", "A^-_max_V")), 2) / 2 / ReadIniFile->ReadIni("Car Informations", "A^-_max_D");
 		carE->AResistance = Calculate_Km_h_To_m_s(ReadIniFile->ReadIni("Car Informations", "A^-_resistence"));
 		carE->Length = ReadIniFile->ReadIni("Car Informations", "Length");
+		ReadIniFile->ReadIni("Car Informations", "Driver", sModeType, ReadIniFilePackage::TransformMode::Lower);
+		if (sModeType == "auto") {
+			carE->DriverMode = DriverMode::Auto;
+		}
+		else {
+			carE->DriverMode = DriverMode::Human;
+		}
 
 		CarElements::MomentValues* const carM = car->Moment;
 		carM->a = 0;
@@ -68,8 +76,7 @@ void InitializerClass::InitializeCarsAndDrivers() {
 
 		Deceleration->Acceptable = ReadIniFile->ReadIni("Driver Informations::A", "A^-_acceptable");
 
-		ReadIniFile->ReadIni("Driver Informations::A", "A^+_acceptable_mode", sModeType);
-		std::transform(sModeType.begin(), sModeType.end(), sModeType.begin(), ToLower());
+		ReadIniFile->ReadIni("Driver Informations::A", "A^+_acceptable_mode", sModeType, ReadIniFilePackage::TransformMode::Lower);
 		if (sModeType == "equal") {
 			Acceleration->Acceptable = Calculate_Km_h_To_m_s(ReadIniFile->ReadIni("Driver Informations::A", "A^+_acceptable_V")) / ReadIniFile->ReadIni("Driver Informations::A", "A^+_acceptable_s");
 		}
@@ -79,8 +86,7 @@ void InitializerClass::InitializeCarsAndDrivers() {
 			Acceleration->Acceptable = Calculate_Km_h_To_m_s(ReadIniFile->ReadIni("Driver Informations::A", "A^+_acceptable_V")) / (*random)(mVal, pVal);
 		}
 
-		ReadIniFile->ReadIni("Driver Informations::A", "A^-_strong_mode", sModeType);
-		std::transform(sModeType.begin(), sModeType.end(), sModeType.begin(), ToLower());
+		ReadIniFile->ReadIni("Driver Informations::A", "A^-_strong_mode", sModeType, ReadIniFilePackage::TransformMode::Lower);
 		if (sModeType == "equal") {
 			Deceleration->Strong = ReadIniFile->ReadIni("Driver Informations::A", "A^-_strong");
 		}
@@ -90,8 +96,7 @@ void InitializerClass::InitializeCarsAndDrivers() {
 			Deceleration->Strong = (*random)(mVal, pVal);
 		}
 
-		ReadIniFile->ReadIni("Driver Informations::A", "A^-_normal_mode", sModeType);
-		std::transform(sModeType.begin(), sModeType.end(), sModeType.begin(), ToLower());
+		ReadIniFile->ReadIni("Driver Informations::A", "A^-_normal_mode", sModeType, ReadIniFilePackage::TransformMode::Lower);
 		if (sModeType == "equal") {
 			Deceleration->Normal = ReadIniFile->ReadIni("Driver Informations::A", "A^-_normal");
 		}
@@ -101,8 +106,7 @@ void InitializerClass::InitializeCarsAndDrivers() {
 			Deceleration->Normal = (*random)(mVal, pVal);
 		}
 
-		ReadIniFile->ReadIni("Driver Informations::A", "A^-_Fnormal_mode", sModeType);
-		std::transform(sModeType.begin(), sModeType.end(), sModeType.begin(), ToLower());
+		ReadIniFile->ReadIni("Driver Informations::A", "A^-_Fnormal_mode", sModeType, ReadIniFilePackage::TransformMode::Lower);
 		if (sModeType == "equal") {
 			FrontDeceleration->Normal = ReadIniFile->ReadIni("Driver Informations::A", "A^-_Fnormal");
 		}
@@ -115,8 +119,7 @@ void InitializerClass::InitializeCarsAndDrivers() {
 		driverM->R->velocity = 1 - (*random)(1.0);
 		driverM->R->gap = 1 - (*random)(1.0);
 
-		ReadIniFile->ReadIni("Driver Informations::Fg", "Fg_mode", sModeType);
-		std::transform(sModeType.begin(), sModeType.end(), sModeType.begin(), ToLower());
+		ReadIniFile->ReadIni("Driver Informations::Fg", "Fg_mode", sModeType, ReadIniFilePackage::TransformMode::Lower);
 		if (sModeType == "equal") {
 			driverM->g->SetBaseNg(ReadIniFile->ReadIni("Driver Informations::Fg", "randomValue"));
 		}
@@ -160,53 +163,19 @@ void InitializerClass::InitializeCarsAndDrivers() {
 */
 bool InitializerClass::InitializePosition() const {
 	//First, arrange them evenly.
-	//Next, select any vehicle in a random order and move the vehicle to a random position between the previous and following vehicles.
-	if (EqualizeAllGap()) {
-		std::vector<double> randomID(N);
-		for (int i = 0; i < N; i++) {
-			randomID[i] = (*random)(1.0);
-		}
-		VectorSort IDSort = VectorSort();
-		IDSort.AscendingSort(randomID);
-		for (std::size_t i = 0; i < IDSort.size(); i++) {
-			MoveBetweenFrontAndRearCars(IDSort[i]);
-		}
-
-		double frontX;
-		double gap;
-		for (int i = 0; i < N; i++) {
-			const CarStruct* const car = (*cars)[i];
-			const CarElements::MomentValuesElements::ArroundCarInformations* const front = car->Moment->arround->front;
-			frontX = front->x - front->Length;
-			if (frontX < 0) {
-				frontX += ModelParameters.L;
-			}
-			gap = frontX - car->Moment->x;
-			if (gap < 0) {
-				gap += ModelParameters.L;
-			}
-
-			const Common::EigenValuesElements::GSerise* const G = car->Driver->Eigen->G;
-			CarElements::MomentValuesElements::GapSerise* const g = car->Moment->g;
-			g->closest = G->Closest;
-			g->cruise = g->closest + G->Cruise;
-			g->influenced = g->cruise + G->Influenced;
-			g->gap = gap;
-			g->deltaGap->current = gap - g->cruise;
-
-			const DriverElements::EigenValuesElements::VSerise* const eigenV = car->Driver->Eigen->V;
-			DriverElements::MomentValuesElements::VSerise* const v = car->Driver->Moment->v;
-			v->deltaV->current = -eigenV->Cruise;
-			v->deltaV->last = -eigenV->Cruise;
-			v->delta->plus = eigenV->DeltaAtCruise->Plus;
-			v->delta->minus = eigenV->DeltaAtCruise->Minus;
-			v->target = eigenV->Cruise;
-		}
-		return true;
+	bool success = EqualizeAllGap();
+	switch (ModelParameters.InitialPositionMode) {
+	case InitialPositionMode::Equal:
+		break;
+	case InitialPositionMode::Random:
+		//Next, select any vehicle in a random order and move the vehicle to a random position between the previous and following vehicles.
+		ChangePositionFromUniformToRandom();
+		break;
+	default:
+		break;
 	}
-	else {
-		return false;
-	}
+
+	return success;
 }
 
 /*
@@ -221,18 +190,18 @@ bool InitializerClass::EqualizeAllGap() const {
 		//Assign vehicle ID randomly.
 		//First, set random numbers between 0 and 1 in an array of size N.
 		std::vector<double> randomID(N);
-		for (int i = 0; i < N; i++) {
+		for (std::size_t i = 0; i < randomID.size(); i++) {
 			randomID[i] = (*random)(1.0);
 		}
 		//Next, sort this array in ascending order of random numbers.
 		VectorSort IDSort = VectorSort();
 		IDSort.AscendingSort(randomID);	//Use the subscript of the original array that corresponds to the rearranged random number array as the ID.
 
-		int front;
-		int rear;
+		std::size_t front;
+		std::size_t rear;
 		double x = ModelParameters.L;
 		const double parGap = remArea / N;
-		for (int i = 0; i < N; i++) {
+		for (std::size_t i = 0; i < cars->size(); i++) {
 			const CarStruct* const car = (*cars)[IDSort[i]];
 			if (i == 0) {
 				front = IDSort[N - 1];
@@ -240,7 +209,7 @@ bool InitializerClass::EqualizeAllGap() const {
 			else {
 				front = IDSort[i - 1];
 			}
-			if (i == N - 1) {
+			if (i == std::size_t(N) - 1) {
 				rear = IDSort[0];
 			}
 			else {
@@ -258,9 +227,55 @@ bool InitializerClass::EqualizeAllGap() const {
 }
 
 /*
+	Change the position from uniform to random.
+*/
+void InitializerClass::ChangePositionFromUniformToRandom() const {
+	std::vector<double> randomID(N);
+	for (std::size_t i = 0; i < randomID.size(); i++) {
+		randomID[i] = (*random)(1.0);
+	}
+	VectorSort IDSort = VectorSort();
+	IDSort.AscendingSort(randomID);
+	for (std::size_t i = 0; i < IDSort.size(); i++) {
+		MoveBetweenFrontAndRearCars(IDSort[i]);
+	}
+
+	double frontX;
+	double gap;
+	for (std::size_t i = 0; i < cars->size(); i++) {
+		const CarStruct* const car = (*cars)[i];
+		const CarElements::MomentValuesElements::ArroundCarInformations* const front = car->Moment->arround->front;
+		frontX = front->x - front->Length;
+		if (frontX < 0) {
+			frontX += ModelParameters.L;
+		}
+		gap = frontX - car->Moment->x;
+		if (gap < 0) {
+			gap += ModelParameters.L;
+		}
+
+		const Common::EigenValuesElements::GSerise* const G = car->Driver->Eigen->G;
+		CarElements::MomentValuesElements::GapSerise* const g = car->Moment->g;
+		g->closest = G->Closest;
+		g->cruise = g->closest + G->Cruise;
+		g->influenced = g->cruise + G->Influenced;
+		g->gap = gap;
+		g->deltaGap->current = gap - g->cruise;
+
+		const DriverElements::EigenValuesElements::VSerise* const eigenV = car->Driver->Eigen->V;
+		DriverElements::MomentValuesElements::VSerise* const v = car->Driver->Moment->v;
+		v->deltaV->current = -eigenV->Cruise;
+		v->deltaV->last = -eigenV->Cruise;
+		v->delta->plus = eigenV->DeltaAtCruise->Plus;
+		v->delta->minus = eigenV->DeltaAtCruise->Minus;
+		v->target = eigenV->Cruise;
+	}
+}
+
+/*
 	Move the vehicle to a random position between the previous and following vehicles.
 */
-void InitializerClass::MoveBetweenFrontAndRearCars(const int& ID) const {
+void InitializerClass::MoveBetweenFrontAndRearCars(const std::size_t& ID) const {
 	//Find the range of movement forward and backward.
 	const CarStruct* car = (*cars)[ID];
 	const CarElements::MomentValuesElements::ArroundCarInformations* front = car->Moment->arround->front;

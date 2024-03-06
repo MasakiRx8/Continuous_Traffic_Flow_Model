@@ -25,6 +25,7 @@ private:
 	UpdatePositionClass* UpdatePosition;
 	StatisticsClass* statistics;
 	bool isFirstInitalize;
+	double global_dX;
 
 	void RunUp();
 	void Measure();

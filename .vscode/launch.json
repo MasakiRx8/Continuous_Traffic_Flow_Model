@@ -24,7 +24,7 @@
                     "ignoreFailures": true
                 }
             ],
-            "preLaunchTask": "make: all debug"
+            "preLaunchTask": "make: debug"
         }
     ]
 }

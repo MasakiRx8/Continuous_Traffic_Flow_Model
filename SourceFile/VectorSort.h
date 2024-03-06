@@ -31,7 +31,7 @@ public:
 	void DescendingSort(std::vector<char>& v);
 
 private:
-	std::vector<int>* indexOrder;
+	std::vector<std::size_t>* indexOrder;
 
 	template<typename _T>
 	void SortInAscendingOrder(std::vector<_T>& v);

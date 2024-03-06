@@ -8,6 +8,11 @@ char ReadIniFilePackage::ToUpper::operator()(const char& c) {
 	return std::toupper(c);
 }
 
+
+char ReadIniFilePackage::ToLower::operator()(const char& c) {
+	return std::tolower(c);
+}
+
 bool ReadIniFilePackage::IsSpace::operator()(const char& c) {
 	return (c == ' ');
 }
@@ -67,7 +72,21 @@ void ReadIniFilePackage::ReadIni(const std::string& SectionName, const std::stri
 }
 
 void ReadIniFilePackage::ReadIni(const std::string& SectionName, const std::string& VariableName, std::string& val) {
+	ReadIni(SectionName, VariableName, val, TransformMode::Original);
+}
+
+void ReadIniFilePackage::ReadIni(const std::string& SectionName, const std::string& VariableName, std::string& val, const TransformMode& transformMode) {
 	GetData(SectionName, VariableName, val);
+	switch (transformMode) {
+	case TransformMode::Upper:
+		std::transform(val.begin(), val.end(), val.begin(), ToUpper());
+		break;
+	case TransformMode::Lower:
+		std::transform(val.begin(), val.end(), val.begin(), ToLower());
+		break;
+	default:
+		break;
+	}
 }
 
 void ReadIniFilePackage::ReadAllData(const std::string& FileName) {

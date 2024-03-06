@@ -25,12 +25,12 @@ void CarElements::MomentValuesElements::Measurement::Reset() {
 	elapsedTime = 0;
 }
 
-CarElements::MomentValuesElements::ArroundCarInformations::ArroundCarInformations(const int& ID, const double& a, const double& v, const double& x, const double& Length)
+CarElements::MomentValuesElements::ArroundCarInformations::ArroundCarInformations(const std::size_t& ID, const double& a, const double& v, const double& x, const double& Length)
 	: ID(ID), a(a), v(v), x(x), Length(Length) { }
 
 CarElements::MomentValuesElements::Arround::Arround(const CarStruct* const rear, const CarStruct* const front)
-	: rear(new ArroundCarInformations(rear->ID, rear->Moment->a, rear->Moment->v, rear->Moment->x, rear->Eigen->Length))
-	, front(new ArroundCarInformations(front->ID, front->Moment->a, front->Moment->v, front->Moment->x, front->Eigen->Length)) {
+	: rear(new ArroundCarInformations(rear->ID, rear->Moment->referenceA, rear->Moment->referenceV, rear->Moment->referenceX, rear->Eigen->Length))
+	, front(new ArroundCarInformations(front->ID, front->Moment->referenceA, front->Moment->referenceV, front->Moment->referenceX, front->Eigen->Length)) {
 	deletedRear = false;
 	deletedFront = false;
 }
@@ -67,6 +67,7 @@ CarElements::MomentValues::MomentValues()
 	a = 0;
 	x = 0;
 	v = 0;
+	UpdateReferences();
 	deletedG = false;
 	deletedMeasurement = false;
 }
@@ -81,6 +82,12 @@ CarElements::MomentValues::~MomentValues() {
 		deletedMeasurement = true;
 	}
 	SafeDelete(arround);
+}
+
+void CarElements::MomentValues::UpdateReferences() {
+	referenceA = a;
+	referenceV = v;
+	referenceX = x;
 }
 
 CarStruct::CarStruct()

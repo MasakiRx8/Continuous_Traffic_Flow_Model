@@ -15,14 +15,24 @@
 
 class ReadIniFilePackage {
 public:
+	enum class TransformMode {
+		Original
+		, Upper
+		, Lower
+	};
+
 	ReadIniFilePackage(const std::string& FileName);	//constructor
 	~ReadIniFilePackage();	//destructor
 	double ReadIni(const std::string& SectionName, const std::string& VariableName);
 	void ReadIni(const std::string& SectionName, const std::string& VariableName, int& val);
 	void ReadIni(const std::string& SectionName, const std::string& VariableName, double& val);
 	void ReadIni(const std::string& SectionName, const std::string& VariableName, std::string& val);
+	void ReadIni(const std::string& SectionName, const std::string& VariableName, std::string& val, const TransformMode& transformMode);
 private:
 	struct ToUpper {
+		char operator()(const char& c);
+	};
+	struct ToLower {
 		char operator()(const char& c);
 	};
 	struct IsSpace	{

@@ -7,7 +7,6 @@
 
 //constructor
 DecideDriverTargetAccelerationClass::DecideDriverTargetAccelerationClass(const ModelBaseClass* const baseClass) : ModelBaseClass(baseClass) {
-	InitializeProperties(this);
 	VRecognition = new VRecognitionPackage();
 	GRecognition = new GRecognitionPackage(ModelParameters.deltaT, ModelParameters.L);
 	PedalChange = new PedalChangePackage(ModelParameters.deltaT);
@@ -25,66 +24,58 @@ DecideDriverTargetAccelerationClass::~DecideDriverTargetAccelerationClass() {
 /*
 	Determine the target acceleration of the next time step.
 */
-void DecideDriverTargetAccelerationClass::DecideDriverTargetAcceleration() {
-	_collision = false;
-
-	bool recognitionHit;
-	double frontX;
-	double nextA;
+void DecideDriverTargetAccelerationClass::DecideDriverTargetAcceleration(const CarStruct* const car) {
 	//Calculate by Eq.(4-12)
-	for (int i = 0; i < N; i++) {
-		const CarStruct* const car = (*cars)[i];
-		const DriverStruct* const driver = car->Driver;
-		Common::MomentValuesElements::VelocityGap* const R = driver->Moment->R;
+	bool recognitionHit;
+	double nextA;
+	const DriverStruct* const driver = car->Driver;
 
-		frontX = car->Moment->arround->front->x;
-		if (frontX <= car->Moment->x) {
-			frontX += ModelParameters.L;
-		}
-		if (frontX - car->Moment->x <= car->Moment->arround->front->Length) {
-			//This case is ERROR.
-			_collision = true;
-			break;
-		}
+	Common::MomentValuesElements::VelocityGap* const R = driver->Moment->R;
+	recognitionHit = false;
 
-		recognitionHit = false;
-
-		//First, calculate the g series.
-		GRecognition->CalculateGSerise(car);
-		if (AvoidCollision->IsEmergency(car)) {
-			driver->Moment->g->emergency = true;
-			recognitionHit = true;
-		}
-		else {
-			driver->Moment->g->emergency = false;
+	//First, calculate the g series.
+	GRecognition->CalculateGSerise(car);
+	if (AvoidCollision->IsEmergency(car)) {
+		driver->Moment->g->emergency = true;
+		recognitionHit = true;
+	}
+	else {
+		driver->Moment->g->emergency = false;
+		if (car->Eigen->DriverMode == DriverMode::Human) {
 			//Calculate Zg by Eq.(4-6)
 			if (R->gap <= GRecognition->Calculate_Zg(car)) {
 				recognitionHit = true;
 			}
 		}
-		if (recognitionHit) {
-			//Recalculate v_target by Eq.(4-11)
+		else {
+			//Auto Mode.
+			//Everytime Hit.
+			recognitionHit = true;
+		}
+	}
+	if (recognitionHit) {
+		//Recalculate v_target by Eq.(4-11)
+		if (car->Eigen->DriverMode == DriverMode::Human) {
 			R->gap = 1 - (*random)(1.0);
-			VRecognition->CalculateVSerise(GRecognition->Calculate_fg(car), car);
+		}
+		VRecognition->CalculateVSerise(GRecognition->Calculate_fg(car), car);
+		driver->Moment->recognitionHit = true;
+	}
+	driver->Moment->v->deltaV->CopyCurrentToLast();	//Copy deltaV of current to last  before updating current it.
+	driver->Moment->v->deltaV->current = car->Moment->v - driver->Moment->v->target;
+	if (!recognitionHit) {
+		//Calculate Zv by Eq.(4-3)
+		if (R->velocity <= VRecognition->Calculate_Zv(car)) {
+			R->velocity = 1 - (*random)(1.0);
 			driver->Moment->recognitionHit = true;
 			recognitionHit = true;
 		}
-		driver->Moment->v->deltaV->CopyCurrentToLast();	//Copy deltaV of current to last  before updating current it.
-		driver->Moment->v->deltaV->current = car->Moment->v - driver->Moment->v->target;
-		if (!recognitionHit) {
-			//Calculate Zv by Eq.(4-3)
-			if (R->velocity <= VRecognition->Calculate_Zv(car)) {
-				R->velocity = 1 - (*random)(1.0);
-				driver->Moment->recognitionHit = true;
-				recognitionHit = true;
-			}
-		}
-		//Determine the target acceleration of the next time step.
-		if (recognitionHit) {
-			nextA = CalculateNextA(car);
-			PedalChange->UpdatePedalChangingInformations(car, nextA);
-			driver->Moment->a = nextA;
-		}
+	}
+	//Determine the target acceleration of the next time step.
+	if (recognitionHit) {
+		nextA = CalculateNextA(car);
+		PedalChange->UpdatePedalChangingInformations(car, nextA);
+		driver->Moment->a = nextA;
 	}
 }
 
@@ -116,7 +107,7 @@ double DecideDriverTargetAccelerationClass::CalculateNextA(const CarStruct* cons
 					amax = frontA * (1 - fg);
 				}
 				else {
-					amax = abs(Acceleration->Acceptable - frontA) * fg + frontA;
+					amax = std::abs(Acceleration->Acceptable - frontA) * fg + frontA;
 				}
 			}
 			else {
@@ -132,12 +123,4 @@ double DecideDriverTargetAccelerationClass::CalculateNextA(const CarStruct* cons
 		}
 	}
 	return nextA;
-}
-
-void DecideDriverTargetAccelerationClass::InitializeProperties(DecideDriverTargetAccelerationClass* const thisPtr) {
-	Collision(std::bind(&DecideDriverTargetAccelerationClass::Get_Collision, thisPtr));
-}
-
-bool DecideDriverTargetAccelerationClass::Get_Collision() const {
-	return _collision;
 }

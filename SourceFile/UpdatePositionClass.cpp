@@ -19,79 +19,76 @@ UpdatePositionClass::~UpdatePositionClass() {
 /*
 	Move the car position by one time step.
 */
-void UpdatePositionClass::UpdateCarPosition() {
-	_global_dX = 0;
+void UpdatePositionClass::UpdateCarPosition(const CarStruct* const car) {
+	_dX = 0;
 
 	double nextX;
 	double nextV;
 	double transitTime;
-	for (int i = 0; i < N; i++) {
-		const CarStruct* const car = (*cars)[i];
-		const DriverStruct* const driver = car->Driver;
+	const DriverStruct* const driver = car->Driver;
 
-		//Determine the car's actual acceleration for the next timestep.
-		DecideNextCarAcceleration(car);
+	//Determine the car's actual acceleration for the next timestep.
+	DecideNextCarAcceleration(car);
 
-		//Move the car position by one time step.
-		const double x = car->Moment->x;
-		const double v = car->Moment->v;
-		const double a = car->Moment->a;
-		nextV = v + a * ModelParameters.deltaT;
-		if (nextV > 0) {
-			nextX = x + v * ModelParameters.deltaT + 0.5 * a * pow(ModelParameters.deltaT, 2);
-		}
-		else {
-			//Due to the model, go backwards is not allowed.
-			if (a < 0) {
-				nextX = x - 0.5 * pow(v, 2) / a;
-			}
-			else {
-				nextX = x;
-			}
-			nextV = 0;
-			car->Moment->a = 0;
-			if (driver->Moment->a < 0) {
-				driver->Moment->recognitionHit = false;
-				DriverElements::MomentValuesElements::PedalInformations* const pedal = driver->Moment->pedal;
-				pedal->changing = false;
-				pedal->timeElapsed = 0;
-				pedal->targetFoot = FootPosition::Brake;
-				pedal->foot = FootPosition::Brake;
-			}
-		}
-		if (nextX > ModelParameters.L) {
-			nextX -= ModelParameters.L;
-		}
-		//Get statistics.
-		//This model uses the same measurement distance as loop coil vehicle detectors on Japanese expressways.
-		CarElements::MomentValuesElements::Measurement* const measurement = car->Moment->measurement;
-		if (measurement->passed) {
-			if (x < statisticsParameters.MeasurementEndX && nextX >= statisticsParameters.MeasurementEndX) {
-				transitTime = measurement->elapsedTime;
-				measurement->Reset();
-				transitTime += GetElapsedTime(car, x, statisticsParameters.MeasurementEndX);
-				statistics->IncrementCounter();
-				statistics->AddMeasurementSectionTransitTime(transitTime);
-			}
-			else {
-				measurement->elapsedTime += ModelParameters.deltaT;
-			}
-		}
-		else {
-			if (x < statisticsParameters.MeasurementStartX && nextX >= statisticsParameters.MeasurementStartX) {
-				measurement->passed = true;
-				measurement->elapsedTime = GetElapsedTime(car, statisticsParameters.MeasurementStartX, nextX);
-			}
-		}
-		if (x <= nextX) {
-			_global_dX += nextX - x;
-		}
-		else {
-			_global_dX += nextX + ModelParameters.L - x;
-		}
-		car->Moment->x = nextX;
-		car->Moment->v = nextV;
+	//Move the car position by one time step.
+	const double x = car->Moment->x;
+	const double v = car->Moment->v;
+	const double a = car->Moment->a;
+	nextV = v + a * ModelParameters.deltaT;
+	if (nextV > 0) {
+		nextX = x + v * ModelParameters.deltaT + 0.5 * a * std::pow(ModelParameters.deltaT, 2);
 	}
+	else {
+		//Due to the model, go backwards is not allowed.
+		if (a < 0) {
+			nextX = x - 0.5 * std::pow(v, 2) / a;
+		}
+		else {
+			nextX = x;
+		}
+		nextV = 0;
+		car->Moment->a = 0;
+		if (driver->Moment->a < 0) {
+			driver->Moment->recognitionHit = false;
+			DriverElements::MomentValuesElements::PedalInformations* const pedal = driver->Moment->pedal;
+			pedal->changing = false;
+			pedal->timeElapsed = 0;
+			pedal->targetFoot = FootPosition::Brake;
+			pedal->foot = FootPosition::Brake;
+		}
+	}
+	if (nextX > ModelParameters.L) {
+		nextX -= ModelParameters.L;
+	}
+	//Get statistics.
+	//This model uses the same measurement distance as loop coil vehicle detectors on Japanese expressways.
+	CarElements::MomentValuesElements::Measurement* const measurement = car->Moment->measurement;
+	if (measurement->passed) {
+		if (x < statisticsParameters.MeasurementEndX && nextX >= statisticsParameters.MeasurementEndX) {
+			transitTime = measurement->elapsedTime;
+			measurement->Reset();
+			transitTime += GetElapsedTime(car, x, statisticsParameters.MeasurementEndX);
+			statistics->IncrementCounter();
+			statistics->AddMeasurementSectionTransitTime(transitTime);
+		}
+		else {
+			measurement->elapsedTime += ModelParameters.deltaT;
+		}
+	}
+	else {
+		if (x < statisticsParameters.MeasurementStartX && nextX >= statisticsParameters.MeasurementStartX) {
+			measurement->passed = true;
+			measurement->elapsedTime = GetElapsedTime(car, statisticsParameters.MeasurementStartX, nextX);
+		}
+	}
+	if (x <= nextX) {
+		_dX = nextX - x;
+	}
+	else {
+		_dX = nextX + ModelParameters.L - x;
+	}
+	car->Moment->x = nextX;
+	car->Moment->v = nextV;
 }
 
 /*
@@ -130,14 +127,14 @@ double UpdatePositionClass::GetElapsedTime(const CarStruct* const car, const dou
 		return (x1 - x0) / v;
 	}
 	else {
-		return (-v + sqrt(pow(v, 2) + 2 * a * (x1 - x0))) / a;
+		return (-v + std::sqrt(std::pow(v, 2) + 2 * a * (x1 - x0))) / a;
 	}
 }
 
 void UpdatePositionClass::InitializeProperties(UpdatePositionClass* const thisPtr) {
-	Global_dX(std::bind(&UpdatePositionClass::Get_Global_dX, thisPtr));
+	dX(std::bind(&UpdatePositionClass::Get__dX, thisPtr));
 }
 
-double UpdatePositionClass::Get_Global_dX() const {
-	return _global_dX;
+double UpdatePositionClass::Get__dX() const {
+	return _dX;
 }

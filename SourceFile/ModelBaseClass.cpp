@@ -13,13 +13,13 @@ ModelBaseClass::ModelBaseClass(const int& N, const ModelParametersClass& ModelPa
 	: N(N), ModelParameters(ModelParameters), statisticsParameters(statisticsParameters) {
 	calledBy = CalledBy::Constructor;
 	cars = new std::vector<CarStruct*>(N);
-	random = new Random(N);
+	random = new Random();
 }
 
 /*
 	This copy constructor is called from anything other than "AdvanceTimeAndMeasureClass".
 */
-ModelBaseClass::ModelBaseClass(const ModelBaseClass* baseClass) : N(baseClass->N), ModelParameters(baseClass->ModelParameters), statisticsParameters(baseClass->statisticsParameters) {
+ModelBaseClass::ModelBaseClass(const ModelBaseClass* const baseClass) : N(baseClass->N), ModelParameters(baseClass->ModelParameters), statisticsParameters(baseClass->statisticsParameters) {
 	calledBy = CalledBy::Others;
 	this->cars = baseClass->cars;
 	this->random = baseClass->random;
@@ -29,7 +29,7 @@ ModelBaseClass::ModelBaseClass(const ModelBaseClass* baseClass) : N(baseClass->N
 ModelBaseClass::~ModelBaseClass() {
 	switch (calledBy) {
 	case ModelBaseClass::Constructor:
-		for (int i = 0; i < N; i++) {
+		for (std::size_t i = 0; i < cars->size(); i++) {
 			SafeDelete((*cars)[i]);	//delete CarStruct
 		}
 		SafeDelete(cars);	//delete vector

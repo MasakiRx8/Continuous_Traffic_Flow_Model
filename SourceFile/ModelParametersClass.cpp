@@ -14,6 +14,14 @@ ModelParametersClass::ModelParametersClass(const std::string& iniFilePath) {
 	ReadIniFile.ReadIni("Model Parameters", "deltaT", _deltaT);
 	ReadIniFile.ReadIni("Model Parameters", "L", _L);
 	ReadIniFile.ReadIni("Model Parameters", "Run-Up Time", _RunUpTime);
+	std::string sMode;
+	ReadIniFile.ReadIni("Model Parameters", "InitialPosition", sMode, ReadIniFilePackage::TransformMode::Lower);
+	if (sMode == "random") {
+		_InitialPositionMode = InitialPositionMode::Random;
+	}
+	else {
+		_InitialPositionMode = InitialPositionMode::Equal;
+	}	
 }
 
 void ModelParametersClass::InitializeProperties(ModelParametersClass* const thisPtr) {
@@ -21,6 +29,7 @@ void ModelParametersClass::InitializeProperties(ModelParametersClass* const this
 	L(std::bind(&ModelParametersClass::Get_L, thisPtr));
 	deltaT(std::bind(&ModelParametersClass::Get_deltaT, thisPtr));
 	RunUpTime(std::bind(&ModelParametersClass::Get_RunUpTime, thisPtr));
+	InitialPositionMode(std::bind(&ModelParametersClass::Get_InitialPositionMode, thisPtr));
 }
 
 int ModelParametersClass::Get_NMax() const {
@@ -37,4 +46,8 @@ double ModelParametersClass::Get_deltaT() const {
 
 double ModelParametersClass::Get_RunUpTime() const {
 	return _RunUpTime;
+}
+
+InitialPositionMode ModelParametersClass::Get_InitialPositionMode() const {
+	return _InitialPositionMode;
 }

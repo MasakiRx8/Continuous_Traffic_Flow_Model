@@ -14,20 +14,20 @@ public:
 	UpdatePositionClass(StatisticsClass* const statistics, const ModelBaseClass* const baseClass);	//constructor
 	~UpdatePositionClass();	//destructor
 	
-	void UpdateCarPosition();	//Move the car position by one time step.
+	void UpdateCarPosition(const CarStruct* const car);	//Move the car position by one time step.
 private:
 	StatisticsClass* const statistics;
 	const PedalChangePackage* PedalChange;
-	double _global_dX;
+	double _dX;
 
 	void DecideNextCarAcceleration(const CarStruct* const car) const;	//Determine the car's actual acceleration for the next timestep.
 	double GetElapsedTime(const CarStruct* const car, const double& x0, const double& x1) const;
 
 	void InitializeProperties(UpdatePositionClass* const thisPtr);
 
-	double Get_Global_dX() const;
+	double Get__dX() const;
 public:
-	ReadOnlyPropertyClass<double> Global_dX;
+	ReadOnlyPropertyClass<double> dX;
 };
 
 #endif // !UPDATEPOSITIONCLASS_H

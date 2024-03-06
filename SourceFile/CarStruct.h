@@ -27,12 +27,12 @@ namespace CarElements {
 
 		struct ArroundCarInformations {
 		public:
-			const int ID;
+			const std::size_t ID;
 			const double& a;
 			const double& v;
 			const double& x;
 			const double& Length;
-			ArroundCarInformations(const int& ID, const double& a, const double& v, const double& x, const double& Length);
+			ArroundCarInformations(const std::size_t& ID, const double& a, const double& v, const double& x, const double& Length);
 		};
 
 		struct Arround {
@@ -54,6 +54,7 @@ namespace CarElements {
 		Common::EigenValuesElements::PlusMinus* const Amax;
 		double AResistance;
 		double Length;
+		DriverMode DriverMode;
 		EigenValues();
 		~EigenValues();
 	private:
@@ -64,23 +65,31 @@ namespace CarElements {
 	struct MomentValues {
 	public:
 		double a;
-		double x;
 		double v;
+		double x;
 		MomentValuesElements::GapSerise* const g;
 		MomentValuesElements::Measurement* const measurement;
 		MomentValuesElements::Arround* arround;
 		MomentValues();
 		~MomentValues();
+
+		void UpdateReferences();
 	private:
+		double referenceA;
+		double referenceV;
+		double referenceX;
+
 		bool deletedG;
 		bool deletedMeasurement;
 		bool deletedArround;
+
+		friend MomentValuesElements::Arround;
 	};
 }
 
 struct CarStruct {
 public:
-	int ID;
+	std::size_t ID;
 	CarElements::EigenValues* const Eigen;
 	CarElements::MomentValues* const Moment;
 	DriverStruct* const Driver;

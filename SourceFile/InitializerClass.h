@@ -18,10 +18,6 @@ public:
 
 	bool Initialize();	//Initialize all parameters of car and driver, in addition, initializes the set positions of all cars.
 private:
-	struct ToLower {
-		char operator()(const char& c);
-	};
-
 	ReadIniFilePackage* ReadIniFile;
 	double allCarLength;
 	double allDclosest;
@@ -29,7 +25,8 @@ private:
 	void InitializeCarsAndDrivers();	//Initialize all parameters of car and driver reading ".ini" file.
 	bool InitializePosition() const;			//Initializes the set positions of all cars.
 	bool EqualizeAllGap() const;	//Set up all cars with an equal distance between them.
-	void MoveBetweenFrontAndRearCars(const int& ID) const;	//Move the vehicle to a random position between the previous and following vehicles.
+	void ChangePositionFromUniformToRandom() const;	//Change the position from uniform to random.
+	void MoveBetweenFrontAndRearCars(const std::size_t& ID) const;	//Move the vehicle to a random position between the previous and following vehicles.
 
 	void InitializeProperties(InitializerClass* const thisPtr);
 

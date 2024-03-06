@@ -14,6 +14,16 @@ void SafeDelete(_T*& p) {
 	}
 }
 
+enum class DriverMode {
+	Human
+	, Auto
+};
+
+enum class InitialPositionMode {
+	Equal
+	, Random
+};
+
 enum class FootPosition {
 	Free
 	, Accel

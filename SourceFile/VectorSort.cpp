@@ -100,7 +100,7 @@ _T VectorSort::GetMiddleValue(const _T& x, const _T& y, const _T& z) const {
 
 void VectorSort::CreateNumber(const std::size_t& size) {
 	SafeDeleteIndexOrder();
-	indexOrder = new std::vector<int>(size);
+	indexOrder = new std::vector<std::size_t>(size);
 	for (std::size_t i = 0; i < size; i++) {
 		(*indexOrder)[i] = i;
 	}

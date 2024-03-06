@@ -27,20 +27,20 @@ bool AvoidCollisionPackage::IsEmergency(const CarStruct* const car) const {
 
 	if (v < 0) {
 		v = 0;
-		dx = -0.5 * pow(currentV, 2) / currentA;
+		dx = -0.5 * std::pow(currentV, 2) / currentA;
 	}
 	else {
-		dx = currentV * deltaT + 0.5 * currentA * pow(deltaT, 2);
+		dx = currentV * deltaT + 0.5 * currentA * std::pow(deltaT, 2);
 	}
 	if (vf < 0) {
 		vf = 0;
-		dxF = 0.5 * pow(currentVf, 2) / Deceleration->Acceptable;
+		dxF = 0.5 * std::pow(currentVf, 2) / Deceleration->Acceptable;
 	}
 	else {
-		dxF = currentVf * deltaT - 0.5 * Deceleration->Acceptable * pow(deltaT, 2);
+		dxF = currentVf * deltaT - 0.5 * Deceleration->Acceptable * std::pow(deltaT, 2);
 	}
 	const double tPedalChange = PedalChange->GetAccelToBrakeTime(car, v);
-	const double expectedGClosest = v * tPedalChange + 0.5 * pow(v, 2) / Deceleration->Strong - 0.5 * pow(vf, 2) / Deceleration->Acceptable + car->Driver->Eigen->G->Closest;
+	const double expectedGClosest = v * tPedalChange + 0.5 * std::pow(v, 2) / Deceleration->Strong - 0.5 * std::pow(vf, 2) / Deceleration->Acceptable + car->Driver->Eigen->G->Closest;
 	const double expectedG = car->Moment->g->gap + dxF - dx;
 
 	if (expectedG < expectedGClosest) {
@@ -59,8 +59,8 @@ double AvoidCollisionPackage::GetEmergencyAcceleration(const CarStruct* const ca
 	double nextA;
 	switch (car->Driver->Moment->pedal->foot) {
 	case FootPosition::Brake:
-		dxFront = 0.5 * pow(car->Moment->arround->front->v, 2) / car->Driver->Eigen->A->Deceleration->Acceptable;
-		nextA = -0.5 * pow(car->Moment->v, 2) / (car->Moment->g->gap + dxFront - car->Driver->Eigen->G->Closest);
+		dxFront = 0.5 * std::pow(car->Moment->arround->front->v, 2) / car->Driver->Eigen->A->Deceleration->Acceptable;
+		nextA = -0.5 * std::pow(car->Moment->v, 2) / (car->Moment->g->gap + dxFront - car->Driver->Eigen->G->Closest);
 		break;
 	default:
 		nextA = -car->Driver->Eigen->A->Deceleration->Strong;
