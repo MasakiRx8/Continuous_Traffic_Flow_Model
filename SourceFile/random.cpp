@@ -1,11 +1,11 @@
 #include "random.h"
 
 Random::Random() {
-	Random(0);
+	Initialize_mt19937(0);
 }
 
-Random::Random(int seedAuxiliaryValue) {
-	mt = new std::mt19937(seedAuxiliaryValue * 1000 + time(nullptr));
+Random::Random(const int& seedAuxiliaryValue) {
+	Initialize_mt19937(seedAuxiliaryValue);
 }
 
 Random::~Random() {
@@ -29,6 +29,10 @@ double Random::operator()(const double& D) const {
 
 double Random::operator()(const double& Dmin, const double& Dmax) const {
 	return create_double_rand(Dmin, Dmax);
+}
+
+void Random::Initialize_mt19937(const int& seedAuxiliaryValue) {
+	mt = new std::mt19937((unsigned int)(seedAuxiliaryValue * 1000 + time(nullptr)));
 }
 
 int Random::create_int_rand(const int& xmin, const int& xmax) const {

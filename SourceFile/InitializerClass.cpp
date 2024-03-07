@@ -164,7 +164,7 @@ void InitializerClass::InitializeCarsAndDrivers() {
 bool InitializerClass::InitializePosition() const {
 	//First, arrange them evenly.
 	bool success = EqualizeAllGap();
-	switch (ModelParameters.InitialPositionMode) {
+	switch (ModelParameters.InitialPosition) {
 	case InitialPositionMode::Equal:
 		break;
 	case InitialPositionMode::Random:
@@ -199,7 +199,7 @@ bool InitializerClass::EqualizeAllGap() const {
 
 		std::size_t front;
 		std::size_t rear;
-		double x = ModelParameters.L;
+		double x = ModelParameters.L / 2;
 		const double parGap = remArea / N;
 		for (std::size_t i = 0; i < cars->size(); i++) {
 			const CarStruct* const car = (*cars)[IDSort[i]];
@@ -216,6 +216,7 @@ bool InitializerClass::EqualizeAllGap() const {
 				rear = IDSort[i + 1];
 			}
 			car->Moment->x = x;
+			car->Moment->UpdateReferences();
 			x -= parGap + car->Eigen->Length;
 			if (x < 0) {
 				x += ModelParameters.L;
@@ -245,14 +246,11 @@ void InitializerClass::ChangePositionFromUniformToRandom() const {
 	for (std::size_t i = 0; i < cars->size(); i++) {
 		const CarStruct* const car = (*cars)[i];
 		const CarElements::MomentValuesElements::ArroundCarInformations* const front = car->Moment->arround->front;
-		frontX = front->x - front->Length;
-		if (frontX < 0) {
+		frontX = front->x;
+		if (frontX <= car->Moment->x) {
 			frontX += ModelParameters.L;
 		}
-		gap = frontX - car->Moment->x;
-		if (gap < 0) {
-			gap += ModelParameters.L;
-		}
+		gap = frontX - front->Length - car->Moment->x;
 
 		const Common::EigenValuesElements::GSerise* const G = car->Driver->Eigen->G;
 		CarElements::MomentValuesElements::GapSerise* const g = car->Moment->g;
@@ -280,30 +278,26 @@ void InitializerClass::MoveBetweenFrontAndRearCars(const std::size_t& ID) const 
 	const CarStruct* car = (*cars)[ID];
 	const CarElements::MomentValuesElements::ArroundCarInformations* front = car->Moment->arround->front;
 	const CarElements::MomentValuesElements::ArroundCarInformations* rear = car->Moment->arround->rear;
-	double x = car->Moment->x;
-	double xRear = x - car->Eigen->Length;
-	if (xRear < 0) {
-		xRear += ModelParameters.L;
+	const double x = car->Moment->x;
+	double frontX = front->x;
+	double rearX = rear->x;
+	if (frontX <= x) {
+		frontX += ModelParameters.L;
 	}
-	double max = front->x - front->Length - x - car->Driver->Eigen->G->Closest;
-	if (max < 0) {
-		max += ModelParameters.L;
+	frontX -= x;
+	if (rearX >= x) {
+		rearX -= ModelParameters.L;
 	}
-	double min = rear->x + (*cars)[rear->ID]->Driver->Eigen->G->Closest - xRear;
-	if (min > 0) {
-		min -= ModelParameters.L;
+	rearX -= x;
+
+	const double xMax = frontX - front->Length - car->Driver->Eigen->G->Closest;
+	const double xMin = rearX + (*cars)[rear->ID]->Driver->Eigen->G->Closest + car->Eigen->Length;
+	double nextX = (xMax - xMin) * (*random)(1.0) + xMin + x;	//>=0
+	if (nextX >= ModelParameters.L) {
+		nextX -= ModelParameters.L;
 	}
-	//Now that the range has been determined, use random numbers to move it.
-	if (min < max) {
-		x += (*random)(min, max);
-		if (x > ModelParameters.L) {
-			x -= ModelParameters.L;
-		}
-		else if (x < 0) {
-			x += ModelParameters.L;
-		}
-		car->Moment->x = x;
-	}
+	car->Moment->x = nextX;
+	car->Moment->UpdateReferences();
 }
 
 void InitializerClass::InitializeProperties(InitializerClass* const thisPtr) {

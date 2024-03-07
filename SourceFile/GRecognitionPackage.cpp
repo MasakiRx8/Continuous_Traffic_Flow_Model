@@ -18,6 +18,7 @@ GRecognitionPackage::~GRecognitionPackage() {
 	Calculated by Eq.(3-5) to (3-7).
 */
 void GRecognitionPackage::CalculateGSerise(const CarStruct* const car) const {
+	CarElements::MomentValuesElements::GapSerise* const g = car->Moment->g;
 	const double v = car->Moment->v;
 	car->Driver->Moment->pedal->t->accelToBrake = PedalChange->GetAccelToBrakeTime(car, v);	//Calculated by Eq.(3-4).
 	car->Driver->Moment->pedal->t->brakeToAccel = PedalChange->GetBrakeToAccelTime(car, v);	//Calculated by Eq.(3-4).
@@ -28,17 +29,11 @@ void GRecognitionPackage::CalculateGSerise(const CarStruct* const car) const {
 	const double vT = v * car->Driver->Moment->pedal->t->accelToBrake;
 	const double v2 = 0.5 * std::pow(v, 2);
 	const double vf2 = 0.5 * std::pow(front->v, 2);
-	double xFrontRear = front->x - front->Length;
-
-	CarElements::MomentValuesElements::GapSerise* const g = car->Moment->g;
-
-	if (xFrontRear < 0) {
-		xFrontRear += L;
+	double frontX = front->x;
+	if (frontX <= x) {
+		frontX += L;
 	}
-	g->gap = xFrontRear - x;
-	if (g->gap < 0) {
-		g->gap += L;
-	}
+	g->gap = frontX - front->Length - x;
 	g->closest = (std::max)(vT + v2 / A->Deceleration->Strong - vf2 / A->Deceleration->Acceptable + G->Closest, G->Closest);	//Calculated by Eq.(3-5).
 	g->cruise = (std::max)(vT + v2 / A->Deceleration->Normal - vf2 / A->FrontDeceleration->Normal, g->closest + G->Cruise);		//Calculated by Eq.(3-6).
 	g->influenced = (std::max)(g->cruise + v * GetTMargin(car), g->cruise + G->Influenced);	//Calculated by Eq.(3-7)

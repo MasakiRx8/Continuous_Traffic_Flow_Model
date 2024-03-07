@@ -57,7 +57,7 @@ void UpdatePositionClass::UpdateCarPosition(const CarStruct* const car) {
 			pedal->foot = FootPosition::Brake;
 		}
 	}
-	if (nextX > ModelParameters.L) {
+	if (nextX >= ModelParameters.L) {
 		nextX -= ModelParameters.L;
 	}
 	//Get statistics.

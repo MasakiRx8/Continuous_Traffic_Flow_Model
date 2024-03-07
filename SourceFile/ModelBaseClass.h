@@ -21,7 +21,7 @@
 class ModelBaseClass {
 public:
 	ModelBaseClass(const int& N, const ModelParametersClass& ModelParameters, const StatisticsParametersClass& statisticsParameters);	//This constructor is only called by "AdvanceTimeAndMeasureClass".
-	ModelBaseClass(const ModelBaseClass* baseClass);	//This copy constructor is called from anything other than "AdvanceTimeAndMeasureClass".
+	ModelBaseClass(const ModelBaseClass* const baseClass);	//This copy constructor is called from anything other than "AdvanceTimeAndMeasureClass".
 	~ModelBaseClass();	//destructor
 protected:
 	const int N;

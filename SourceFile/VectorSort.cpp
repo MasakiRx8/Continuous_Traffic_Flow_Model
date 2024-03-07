@@ -95,7 +95,7 @@ void VectorSort::SortInDescendingOrder(std::vector<_T>& v) {
 
 template<typename _T>
 _T VectorSort::GetMiddleValue(const _T& x, const _T& y, const _T& z) const { 
-	return std::min(std::max(x, y), z); 
+	return (std::min)((std::max)(x, y), z); 
 }
 
 void VectorSort::CreateNumber(const std::size_t& size) {
