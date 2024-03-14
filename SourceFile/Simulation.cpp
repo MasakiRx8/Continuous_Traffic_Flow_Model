@@ -5,18 +5,27 @@
 #include "Simulation.h"
 
 //constructor
-Simulation::Simulation(const std::string& IniFileFolderPath, const int& IniFileNumber, const std::string& ResultFileFolderPath) : IniFileFolderPath(IniFileFolderPath), IniFileNumber(IniFileNumber) {
-	fFDPath = ResultFileFolderPath + R"(\FD.csv)";
-	fGlovalVDPath = ResultFileFolderPath + R"(\Global_VD.csv)";
-	fLocalVDPath = ResultFileFolderPath + R"(\Local_VD.csv)";
-	ModelParameters = new ModelParametersClass(IniFileFolderPath + R"(\ModelParameters.ini)");
-	statisticsParameters = new StatisticsParametersClass(IniFileFolderPath + R"(\StatisticsParameters.ini)");
+Simulation::Simulation(const std::string& IniFileFolderPath, const int& IniFileNumber, const int& RunNumber, const std::string& ResultFileFolderPath, const bool& CreateSnapShot, const std::string& SnapShotFolderPath) 
+	: IniFileFolderPath(IniFileFolderPath), IniFileNumber(IniFileNumber), RunNumber(RunNumber)
+	, CreateSnapShot(CreateSnapShot), SnapShotFolderPath(SnapShotFolderPath) {
+	if (RunNumber == 0) {
+		fFDPath = ResultFileFolderPath + R"(/)" + "FD.csv";
+		fGlovalVDPath = ResultFileFolderPath + R"(/)" + "Global_VD.csv";
+		fLocalVDPath = ResultFileFolderPath + R"(/)" + "Local_VD.csv";
+	}
+	else {
+		fFDPath = ResultFileFolderPath + R"(/)" + "FD" + std::to_string(RunNumber) + ".csv";
+		fGlovalVDPath = ResultFileFolderPath + R"(/)" + "Global_VD" + std::to_string(RunNumber) + ".csv";
+		fLocalVDPath = ResultFileFolderPath + R"(/)" + "Local_VD" + std::to_string(RunNumber) +  ".csv";
+	}
+	ModelParameters = new ModelParametersClass(IniFileFolderPath + R"(/ModelParameters.ini)");
+	StatisticsParameters = new StatisticsParametersClass(IniFileFolderPath + R"(/StatisticsParameters.ini)");
 }
 
 //destructor
 Simulation::~Simulation() {
 	SafeDelete(ModelParameters);		//delete ModelParametersClass
-	SafeDelete(statisticsParameters);	//delete StatisticsParametersClass
+	SafeDelete(StatisticsParameters);	//delete StatisticsParametersClass
 }
 
 /*
@@ -34,18 +43,18 @@ void Simulation::simulate() {
 		std::stringstream sResultFD;
 		std::stringstream sResultGlovalVD;
 		std::stringstream sResultLocalVD;
-		AdvanceTimeAndMeasureClass* AdvanceTime = new AdvanceTimeAndMeasureClass(N, *ModelParameters, *statisticsParameters);	//model execution class
-		if (AdvanceTime->Initialize(IniFileFolderPath, IniFileNumber)) {	//initialization
+		//Model execution class construct and initialize model.
+		AdvanceTimeAndMeasureClass* AdvanceTime = new AdvanceTimeAndMeasureClass(IniFileFolderPath, IniFileNumber, N, *ModelParameters, *StatisticsParameters, CreateSnapShot, RunNumber, SnapShotFolderPath);	
+		if (AdvanceTime->InitializeSuccess) {
 			AdvanceTime->AdvanceTimeAndMeasure();	//run-up and measurement
 			if (AdvanceTime->SuccedMeasure) {
 				//create each result stringstreams
-				const StatisticsClass* statistics = AdvanceTime->Statistics();
+				const StatisticsClass* const statistics = AdvanceTime->Statistics();
 				const StatisticsElementsClass* const Global = statistics->Global;
-				const StatisticsElementsClass* local;
 				for (std::size_t j = 0; j < statistics->Local->size(); j++) {
-					local = (*statistics->Local)[j];
-					sResultFD << local->K << "," << local->Counter << std::endl;
-					sResultLocalVD << local->K << "," << Calculate_m_s_To_Km_h(local->AverageVelocity) << std::endl;
+					const StatisticsElementsClass* const local = (*statistics->Local)[j];
+					sResultFD << N << "," << local->K << "," << local->Counter << std::endl;
+					sResultLocalVD << N << "," << local->K << "," << Calculate_m_s_To_Km_h(local->AverageVelocity) << std::endl;
 				}
 				sResultGlovalVD << N << "," << Global->K << "," << Calculate_m_s_To_Km_h(Global->AverageVelocity) << std::endl;
 			}
@@ -70,9 +79,6 @@ void Simulation::simulate() {
 			delete AdvanceTime;	//delete AdvanceTimeAndMeasureClass
 		}
 	}
-	ofsFD.close();
-	ofsGlovalVD.close();
-	ofsLocalVD.close();
 }
 
 /*
@@ -81,8 +87,8 @@ void Simulation::simulate() {
 void Simulation::CreateNLists() {
 	isFirstSimulation = true;
 	std::ifstream ifs(fGlovalVDPath);
-	std::vector<bool> NListsFG(ModelParameters->NMax, true);
-	int listSize = ModelParameters->NMax;
+	std::size_t listSize = ModelParameters->NMax;
+	std::vector<bool> NListsFG(listSize, true);
 	if (ifs) {
 		std::string S;
 		std::getline(ifs, S);
@@ -116,21 +122,30 @@ void Simulation::CreateNLists() {
 }
 
 /*
-	Initialize each result ofstreams, and write each header to CSV when this is simulated it for the first time.
+	Write each header to CSV when this is simulated it for the first time.
 */
 void Simulation::WriteCSVHeaderToCSV() {
-	ofsFD = std::ofstream(fFDPath, std::ios::app);
-	ofsGlovalVD = std::ofstream(fGlovalVDPath, std::ios::app);
-	ofsLocalVD = std::ofstream(fLocalVDPath, std::ios::app);
 	if (isFirstSimulation) {
-		ofsFD << "k,Flux" << std::endl;
+		std::ofstream ofsFD(fFDPath, std::ios::app);
+		std::ofstream ofsGlovalVD(fGlovalVDPath, std::ios::app);
+		std::ofstream ofsLocalVD(fLocalVDPath, std::ios::app);
+		ofsFD << "N,k,Flux" << std::endl;
 		ofsGlovalVD << "N,rho,V" << std::endl;
-		ofsLocalVD << "k,V" << std::endl;
+		ofsLocalVD << "N,k,V" << std::endl;
+		ofsFD.close();
+		ofsGlovalVD.close();
+		ofsLocalVD.close();
 	}
 }
 
 void Simulation::WriteResultToCSV(const std::stringstream& sResultFD, const std::stringstream& sResultGlovalVD, const std::stringstream& sResultLocalVD) {
+	std::ofstream ofsFD(fFDPath, std::ios::app);
+	std::ofstream ofsGlovalVD(fGlovalVDPath, std::ios::app);
+	std::ofstream ofsLocalVD(fLocalVDPath, std::ios::app);
 	ofsFD << sResultFD.str();
 	ofsGlovalVD << sResultGlovalVD.str();
 	ofsLocalVD << sResultLocalVD.str();
+	ofsFD.close();
+	ofsGlovalVD.close();
+	ofsLocalVD.close();
 }

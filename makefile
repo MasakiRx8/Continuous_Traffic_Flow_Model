@@ -26,14 +26,11 @@ DOBJECTDIR = ./obj/debug
 # Root directory of source files
 SRCROOT = ./SourceFile
 
-INIDIR = ./IniFiles
 # List all files using the foreach command based on the source directory
 SRCS = $(foreach dir, $(SRCROOT), $(wildcard $(dir)/*.$(EXTENSION)))
 # Specify object file names in the same structure as the source directory
 ROBJLIST = $(patsubst $(SRCROOT)/%.o, $(ROBJECTDIR)/%.o, $(patsubst %.$(EXTENSION), %.o, $(SRCS)))
 DOBJLIST = $(patsubst $(SRCROOT)/%.o, $(DOBJECTDIR)/%.o, $(patsubst %.$(EXTENSION), %.o, $(SRCS)))
-
-INIFILES := $(shell ls $(INIDIR))
 
 .PHONY: all build clean alldebug debugbuild debugclean 
 
@@ -54,19 +51,11 @@ debugclean:
 $(RTARGET): $(ROBJLIST)
 	@echo "$^"
 	@if [ ! -e $(RTARGETDIR) ]; then mkdir -p $(RTARGETDIR); fi
-	@if [ ! -e $(RTARGETDIR)/Result ]; then mkdir -p $(RTARGETDIR)/Result; fi
-	rm -rf $(RTARGETDIR)/IniFiles
-	mkdir -p $(RTARGETDIR)/IniFiles
-	cd $(INIDIR); cp $(INIFILES) ../$(RTARGETDIR)/IniFiles
 	$(CXX) -o $(RTARGETDIR)/$@ $^ $(LDFLAGS) $(LIBS)
 
 $(DTARGET): $(DOBJLIST)
 	@echo "$^"
 	@if [ ! -e $(DTARGETDIR) ]; then mkdir -p $(DTARGETDIR); fi
-	@if [ ! -e $(DTARGETDIR)/Result ]; then mkdir -p $(DTARGETDIR)/Result; fi
-	rm -rf $(DTARGETDIR)/IniFiles
-	mkdir -p $(DTARGETDIR)/IniFiles
-	cd $(INIDIR); cp $(INIFILES) ../$(DTARGETDIR)/IniFiles
 	$(CXX) -o $(DTARGETDIR)/$@ $^ $(LDFLAGS) $(LIBS)
 
 $(ROBJECTDIR)/%.o: $(SRCROOT)/%.$(EXTENSION)

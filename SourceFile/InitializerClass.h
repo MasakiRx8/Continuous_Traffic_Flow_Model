@@ -13,7 +13,7 @@
 
 class InitializerClass : public ModelBaseClass {
 public:
-	InitializerClass(const ModelBaseClass* myBase, const std::string& IniFileFolderPath, const int& IniFileNumber);	//constructor
+	InitializerClass(const std::string& IniFileFolderPath, const int& IniFileNumber, const ModelBaseClass* myBase);	//constructor
 	~InitializerClass();	//destructor
 
 	bool Initialize();	//Initialize all parameters of car and driver, in addition, initializes the set positions of all cars.

@@ -10,7 +10,7 @@
 
 class GRecognitionPackage {
 public:
-	GRecognitionPackage(const double& deltaT, const double& L);	//constructor
+	GRecognitionPackage(const double& deltaT, const double& L, const PedalChangePackage* const PedalChange);	//constructor
 	~GRecognitionPackage();	//destructor
 
 	void CalculateGSerise(const CarStruct* const car) const;	//Calculated by Eq.(3-5) to (3-7).
@@ -19,7 +19,7 @@ public:
 private:
 	const double deltaT;
 	const double L;
-	const PedalChangePackage* PedalChange;
+	const PedalChangePackage* const PedalChange;
 
 	double GetNg(const CarElements::MomentValuesElements::GapSerise* const g) const;	//Calculate Ng(delta g(t)) of Eq.(3-8).
 	double GetTMargin(const CarStruct* const car) const;	//Calculate t_margin(v(t)) of Eq.(3-7).

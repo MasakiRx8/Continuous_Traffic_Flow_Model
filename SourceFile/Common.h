@@ -14,23 +14,23 @@ void SafeDelete(_T*& p) {
 	}
 }
 
-enum class DriverMode {
+enum class DriverModeType {
 	Human
 	, Auto
 };
 
-enum class InitialPositionMode {
+enum class InitialPositionModeType {
 	Equal
 	, Random
 };
 
-enum class FootPosition {
+enum class FootPositionType {
 	Free
 	, Accel
 	, Brake
 };
 
-enum class PedalChangedState {
+enum class PedalChangedStateType {
 	NoChanged
 	, Changing
 	, Changed

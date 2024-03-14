@@ -12,17 +12,21 @@
 
 class DecideDriverTargetAccelerationClass : public ModelBaseClass {
 public:
-	DecideDriverTargetAccelerationClass(const ModelBaseClass* const baseClass);	//constructor
+	DecideDriverTargetAccelerationClass(const PedalChangePackage* const PedalChange,const ModelBaseClass* const baseClass);	//constructor
 	~DecideDriverTargetAccelerationClass();	//destructor
 
 	void DecideDriverTargetAcceleration(const CarStruct* const car);	//Determine the target acceleration of the next time step.
 private:
-	const VRecognitionPackage* VRecognition;
-	const GRecognitionPackage* GRecognition;
-	const PedalChangePackage* PedalChange;
-	const AvoidCollisionPackage* AvoidCollision;
+	const PedalChangePackage* const PedalChange;
+	const VRecognitionPackage* const VRecognition;
+	const GRecognitionPackage* const GRecognition;
+	const AvoidCollisionPackage* const AvoidCollision;
 
 	double CalculateNextA(const CarStruct* const car);	//Calculate the target acceleration of the next time step using Eq.(4-12). 
+
+	bool deletedVRecognition;
+	bool deletedGRecognition;
+	bool deletedAvoidCollision;
 };
 
 #endif // !DECIDEDRIVERTARGETACCELERATIONCLASS_H

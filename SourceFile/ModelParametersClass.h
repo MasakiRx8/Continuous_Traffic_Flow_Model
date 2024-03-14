@@ -16,20 +16,20 @@ private:
 	double _L;
 	double _deltaT;
 	double _RunUpTime;
-	InitialPositionMode _InitialPosition;
+	InitialPositionModeType _InitialPositionMode;
 	void InitializeProperties(ModelParametersClass* const thisPtr);
 
-	int Get_NMax() const;
-	double Get_L() const;
-	double Get_deltaT() const;
-	double Get_RunUpTime() const;
-	InitialPositionMode Get_InitialPosition() const;
+	const int& Get_NMax() const;
+	const double& Get_L() const;
+	const double& Get_deltaT() const;
+	const double& Get_RunUpTime() const;
+	const InitialPositionModeType& Get_InitialPositionMode() const;
 public:
-	ReadOnlyPropertyClass<int> NMax;
-	ReadOnlyPropertyClass<double> L;
-	ReadOnlyPropertyClass<double> deltaT;
-	ReadOnlyPropertyClass<double> RunUpTime;
-	ReadOnlyPropertyClass<InitialPositionMode> InitialPosition;
+	ReadOnlyPropertyClass<const int&> NMax;
+	ReadOnlyPropertyClass<const double&> L;
+	ReadOnlyPropertyClass<const double&> deltaT;
+	ReadOnlyPropertyClass<const double&> RunUpTime;
+	ReadOnlyPropertyClass<const InitialPositionModeType&> InitialPositionMode;
 };
 
 #endif // !MODELPARAMETERSCLASS_H

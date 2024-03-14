@@ -112,8 +112,8 @@ DriverElements::MomentValuesElements::PedalInformations::PedalInformations()
 	: t(new NeedChangingTime()) {
 	needTime = timeElapsed = 0;
 	changing = false;
-	foot = FootPosition::Brake;
-	targetFoot = FootPosition::Accel;
+	footPosition = FootPositionType::Brake;
+	targetFootPosition = FootPositionType::Accel;
 	deletedT = false;
 }
 

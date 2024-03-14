@@ -72,16 +72,16 @@ void ReadIniFilePackage::ReadIni(const std::string& SectionName, const std::stri
 }
 
 void ReadIniFilePackage::ReadIni(const std::string& SectionName, const std::string& VariableName, std::string& val) {
-	ReadIni(SectionName, VariableName, val, TransformMode::Original);
+	ReadIni(SectionName, VariableName, val, TransformModeType::Original);
 }
 
-void ReadIniFilePackage::ReadIni(const std::string& SectionName, const std::string& VariableName, std::string& val, const TransformMode& transformMode) {
+void ReadIniFilePackage::ReadIni(const std::string& SectionName, const std::string& VariableName, std::string& val, const TransformModeType& transformMode) {
 	GetData(SectionName, VariableName, val);
 	switch (transformMode) {
-	case TransformMode::Upper:
+	case TransformModeType::Upper:
 		std::transform(val.begin(), val.end(), val.begin(), ToUpper());
 		break;
-	case TransformMode::Lower:
+	case TransformModeType::Lower:
 		std::transform(val.begin(), val.end(), val.begin(), ToLower());
 		break;
 	default:
@@ -91,6 +91,10 @@ void ReadIniFilePackage::ReadIni(const std::string& SectionName, const std::stri
 
 void ReadIniFilePackage::ReadAllData(const std::string& FileName) {
 	std::ifstream ifs(FileName);
+	if (!ifs) {
+		throw std::invalid_argument("Not File Existants:" + FileName);
+		return;
+	}
 	std::string section;
 	std::string variable;
 	std::string S;

@@ -6,15 +6,13 @@
 #include "UpdatePositionClass.h"
 
 //constructor
-UpdatePositionClass::UpdatePositionClass(StatisticsClass* const statistics, const ModelBaseClass* const baseClass) : statistics(statistics), ModelBaseClass(baseClass) {
+UpdatePositionClass::UpdatePositionClass(StatisticsClass* const statistics, const PedalChangePackage* const PedalChange, const ModelBaseClass* const baseClass)
+	: statistics(statistics), PedalChange(PedalChange), ModelBaseClass(baseClass) {
 	InitializeProperties(this);
-	PedalChange = new PedalChangePackage(ModelParameters.deltaT);
 }
 
 //destructor
-UpdatePositionClass::~UpdatePositionClass() {
-	SafeDelete(PedalChange);	//delete PedalChangePackage
-}
+UpdatePositionClass::~UpdatePositionClass() { }
 
 /*
 	Move the car position by one time step.
@@ -22,8 +20,6 @@ UpdatePositionClass::~UpdatePositionClass() {
 void UpdatePositionClass::UpdateCarPosition(const CarStruct* const car) {
 	_dX = 0;
 
-	double nextX;
-	double nextV;
 	double transitTime;
 	const DriverStruct* const driver = car->Driver;
 
@@ -31,10 +27,13 @@ void UpdatePositionClass::UpdateCarPosition(const CarStruct* const car) {
 	DecideNextCarAcceleration(car);
 
 	//Move the car position by one time step.
-	const double x = car->Moment->x;
-	const double v = car->Moment->v;
-	const double a = car->Moment->a;
-	nextV = v + a * ModelParameters.deltaT;
+	CarElements::MomentValues* const carMoment = car->Moment;
+	const double& x = carMoment->x;
+	const double& v = carMoment->v;
+	const double& a = carMoment->a;
+
+	double nextX;
+	double nextV = v + a * ModelParameters.deltaT;
 	if (nextV > 0) {
 		nextX = x + v * ModelParameters.deltaT + 0.5 * a * std::pow(ModelParameters.deltaT, 2);
 	}
@@ -47,14 +46,15 @@ void UpdatePositionClass::UpdateCarPosition(const CarStruct* const car) {
 			nextX = x;
 		}
 		nextV = 0;
-		car->Moment->a = 0;
-		if (driver->Moment->a < 0) {
-			driver->Moment->recognitionHit = false;
-			DriverElements::MomentValuesElements::PedalInformations* const pedal = driver->Moment->pedal;
+		carMoment->a = 0;
+		DriverElements::MomentValues* driverMoment = driver->Moment;
+		if (driverMoment->a < 0) {
+			driverMoment->recognitionHit = false;
+			DriverElements::MomentValuesElements::PedalInformations* const pedal = driverMoment->pedal;
 			pedal->changing = false;
 			pedal->timeElapsed = 0;
-			pedal->targetFoot = FootPosition::Brake;
-			pedal->foot = FootPosition::Brake;
+			pedal->targetFootPosition = FootPositionType::Brake;
+			pedal->footPosition = FootPositionType::Brake;
 		}
 	}
 	if (nextX >= ModelParameters.L) {
@@ -62,12 +62,12 @@ void UpdatePositionClass::UpdateCarPosition(const CarStruct* const car) {
 	}
 	//Get statistics.
 	//This model uses the same measurement distance as loop coil vehicle detectors on Japanese expressways.
-	CarElements::MomentValuesElements::Measurement* const measurement = car->Moment->measurement;
+	CarElements::MomentValuesElements::Measurement* const measurement = carMoment->measurement;
 	if (measurement->passed) {
-		if (x < statisticsParameters.MeasurementEndX && nextX >= statisticsParameters.MeasurementEndX) {
+		if (x < StatisticsParameters.MeasurementEndX && nextX >= StatisticsParameters.MeasurementEndX) {
 			transitTime = measurement->elapsedTime;
 			measurement->Reset();
-			transitTime += GetElapsedTime(car, x, statisticsParameters.MeasurementEndX);
+			transitTime += GetElapsedTime(car, x, StatisticsParameters.MeasurementEndX);
 			statistics->IncrementCounter();
 			statistics->AddMeasurementSectionTransitTime(transitTime);
 		}
@@ -76,9 +76,16 @@ void UpdatePositionClass::UpdateCarPosition(const CarStruct* const car) {
 		}
 	}
 	else {
-		if (x < statisticsParameters.MeasurementStartX && nextX >= statisticsParameters.MeasurementStartX) {
-			measurement->passed = true;
-			measurement->elapsedTime = GetElapsedTime(car, statisticsParameters.MeasurementStartX, nextX);
+		if (x < StatisticsParameters.MeasurementStartX && nextX >= StatisticsParameters.MeasurementStartX) {
+			if (nextX < StatisticsParameters.MeasurementEndX) {
+				measurement->passed = true;
+				measurement->elapsedTime = GetElapsedTime(car, StatisticsParameters.MeasurementStartX, nextX);
+			}
+			else {
+				transitTime = GetElapsedTime(car, StatisticsParameters.MeasurementStartX, StatisticsParameters.MeasurementEndX);
+				statistics->IncrementCounter();
+				statistics->AddMeasurementSectionTransitTime(transitTime);
+			}
 		}
 	}
 	if (x <= nextX) {
@@ -87,33 +94,37 @@ void UpdatePositionClass::UpdateCarPosition(const CarStruct* const car) {
 	else {
 		_dX = nextX + ModelParameters.L - x;
 	}
-	car->Moment->x = nextX;
-	car->Moment->v = nextV;
+	carMoment->x = std::move(nextX);
+	carMoment->v = std::move(nextV);
+	_position = carMoment->x;
 }
 
 /*
 	Determine the car's actual acceleration for the next timestep.
 */
 void UpdatePositionClass::DecideNextCarAcceleration(const CarStruct* const car) const {
-	DriverElements::MomentValuesElements::PedalInformations* const pedal = car->Driver->Moment->pedal;
-	switch (PedalChange->DoPedalChange(pedal, car->Driver->Moment->recognitionHit)) {
-	case PedalChangedState::NoChanged:
+	CarElements::MomentValues* const carMoment = car->Moment;
+	DriverElements::MomentValues* const driverMoment = car->Driver->Moment;
+	DriverElements::MomentValuesElements::PedalInformations* const pedal = driverMoment->pedal;
+	bool& recognitionHit = driverMoment->recognitionHit;
+	switch (PedalChange->DoPedalChange(pedal, recognitionHit)) {
+	case PedalChangedStateType::NoChanged:
 		break;
-	case PedalChangedState::Changed:
-		car->Moment->a = car->Driver->Moment->a;
-		car->Driver->Moment->recognitionHit = false;
+	case PedalChangedStateType::Changed:
+		carMoment->a = driverMoment->a;
+		recognitionHit = false;
 		break;
-	case PedalChangedState::Changing:
-		if (car->Moment->v > 0) {
-			car->Moment->a = -car->Eigen->AResistance;
+	case PedalChangedStateType::Changing:
+		if (carMoment->v > 0) {
+			carMoment->a = -car->Eigen->AResistance;
 		}
 		else {
-			car->Moment->a = 0;
+			carMoment->a = 0;
 		}
 		break;
-	case PedalChangedState::ImmediatelyChanged:
-		car->Moment->a = car->Driver->Moment->a;
-		car->Driver->Moment->recognitionHit = false;
+	case PedalChangedStateType::ImmediatelyChanged:
+		carMoment->a = driverMoment->a;
+		recognitionHit = false;
 		break;
 	default:
 		break;
@@ -121,8 +132,8 @@ void UpdatePositionClass::DecideNextCarAcceleration(const CarStruct* const car) 
 }
 
 double UpdatePositionClass::GetElapsedTime(const CarStruct* const car, const double& x0, const double& x1) const {
-	const double a = car->Moment->a;
-	const double v = car->Moment->v;
+	const double& a = car->Moment->a;
+	const double& v = car->Moment->v;
 	if (a == 0) {
 		return (x1 - x0) / v;
 	}
@@ -132,9 +143,14 @@ double UpdatePositionClass::GetElapsedTime(const CarStruct* const car, const dou
 }
 
 void UpdatePositionClass::InitializeProperties(UpdatePositionClass* const thisPtr) {
-	dX(std::bind(&UpdatePositionClass::Get__dX, thisPtr));
+	dX(std::bind(&UpdatePositionClass::Get_dX, thisPtr));
+	Position(std::bind(&UpdatePositionClass::Get_Position, thisPtr));
 }
 
-double UpdatePositionClass::Get__dX() const {
+const double& UpdatePositionClass::Get_dX() const {
 	return _dX;
+}
+
+const double& UpdatePositionClass::Get_Position() const {
+	return _position;
 }

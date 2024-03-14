@@ -19,14 +19,14 @@ void StatisticsElementsClass::InitializeProperties(StatisticsElementsClass* cons
 	AverageVelocity(std::bind(&StatisticsElementsClass::Get_AverageVelocity, thisPtr));
 }
 
-int StatisticsElementsClass::Get_Counter() const {
+const int& StatisticsElementsClass::Get_Counter() const {
 	return _counter;
 }
 
-double StatisticsElementsClass::Get_K() const {
+const double& StatisticsElementsClass::Get_K() const {
 	return _k;
 }
 
-double StatisticsElementsClass::Get_AverageVelocity() const {
+const double& StatisticsElementsClass::Get_AverageVelocity() const {
 	return _averageVelocity;
 }
