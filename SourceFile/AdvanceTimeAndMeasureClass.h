@@ -5,6 +5,8 @@
 
 #ifndef ADVANCETIMEANDMEASURECLASS_H
 #define ADVANCETIMEANDMEASURECLASS_H
+#include <fstream>
+#include <sstream>
 #include "ReadOnlyPropertyClass.h"
 #include "ModelBaseClass.h"
 #include "DecideDriverTargetAccelerationClass.h"
@@ -13,29 +15,38 @@
 
 class AdvanceTimeAndMeasureClass : public ModelBaseClass {
 public:
-	AdvanceTimeAndMeasureClass(const int& N, const ModelParametersClass& ModelParameters, const StatisticsParametersClass& statisticsParameters);	//constructor
+	AdvanceTimeAndMeasureClass(const std::string& IniFileFolderPath, const int& IniFileNumber, const int& N, const ModelParametersClass& ModelParameters, const StatisticsParametersClass& StatisticsParameters, const bool& CreateSnapShot, const int& RunNumber, const std::string& SnapShotFolderPath);	//constructor
 	~AdvanceTimeAndMeasureClass();	//destructor
 
-	bool Initialize(const std::string& IniFileFolderPath, const int& IniFileNumber);
 	void AdvanceTimeAndMeasure();
-	StatisticsClass* const Statistics() const;
+	const StatisticsClass* const Statistics() const;
 private:
+	const bool CreateSnapShot;
+	std::string SnapShotFileNameBase;
+
+	bool _initializeSuccess;
 	bool _succedMeasure;
+
+	const PedalChangePackage* const PedalChnage;
 	DecideDriverTargetAccelerationClass* DecideDriverTargetAcceleration;
 	UpdatePositionClass* UpdatePosition;
 	StatisticsClass* statistics;
-	bool isFirstInitalize;
 	double global_dX;
+	bool deletedPedalChnage;
 
+	void Initialize(const std::string& IniFileFolderPath, const int& IniFileNumber);
 	void RunUp();
 	void Measure();
-	void AdvaceTime();
+	std::string AdvaceTime();
+	std::string GetSnapShotCSVName(const int& MeasureNumber);
 
 	void InitializeProperties(AdvanceTimeAndMeasureClass* const thisPtr);
 
-	bool Get_SuccedMeasure() const;
+	const bool& Get_InitializeSuccess() const;
+	const bool& Get_SuccedMeasure() const;
 public:
-	ReadOnlyPropertyClass<bool> SuccedMeasure;
+	ReadOnlyPropertyClass<const bool&> InitializeSuccess;
+	ReadOnlyPropertyClass<const bool&> SuccedMeasure;
 };
 
 #endif // !ADVANCETIMEANDMEASURECLASS_H

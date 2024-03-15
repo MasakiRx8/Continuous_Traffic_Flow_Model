@@ -12,7 +12,7 @@
 
 class StatisticsClass {
 public:
-	StatisticsClass(const int& N, const double& globalK, const StatisticsParametersClass& statisticsParameters);	//constructor
+	StatisticsClass(const int& N, const double& globalK, const StatisticsParametersClass& StatisticsParameters);	//constructor
 	~StatisticsClass();	//destructor
 
 	StatisticsElementsClass* const Global;
@@ -29,7 +29,7 @@ private:
 	double sumMeasurementSectionTransitTime;
 	double sumGlobal_dX;
 	const int N;
-	const StatisticsParametersClass& statisticsParameters;
+	const StatisticsParametersClass& StatisticsParameters;
 
 	int addingNumber;
 	double localK;

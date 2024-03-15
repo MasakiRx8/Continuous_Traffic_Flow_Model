@@ -16,14 +16,17 @@ AvoidCollisionPackage::~AvoidCollisionPackage() {
 	Judged by Eq.(4-9).
 */
 bool AvoidCollisionPackage::IsEmergency(const CarStruct* const car) const {
-	const DriverElements::EigenValuesElements::AccelerationSeries* const Deceleration = car->Driver->Eigen->A->Deceleration;
-	const double currentV = car->Moment->v;
-	const double currentVf = car->Moment->arround->front->v;
-	const double currentA = car->Moment->a;
+	const CarElements::MomentValues* const carMoment = car->Moment;
+	const DriverElements::EigenValues* const driverEigen = car->Driver->Eigen;
+	const DriverElements::EigenValuesElements::AccelerationSeries* const Deceleration = driverEigen->A->Deceleration;
+	const double& DAcceptable = Deceleration->Acceptable;
+	const double& currentV = carMoment->v;
+	const double& currentVf = carMoment->arround->front->v;
+	const double& currentA = carMoment->a;
 	double dx;
 	double dxF;
-	double v = currentV + currentA * deltaT;
-	double vf = currentVf - Deceleration->Acceptable * deltaT;
+	double&& v = currentV + currentA * deltaT;
+	double&& vf = currentVf - DAcceptable * deltaT;
 
 	if (v < 0) {
 		v = 0;
@@ -34,14 +37,14 @@ bool AvoidCollisionPackage::IsEmergency(const CarStruct* const car) const {
 	}
 	if (vf < 0) {
 		vf = 0;
-		dxF = 0.5 * std::pow(currentVf, 2) / Deceleration->Acceptable;
+		dxF = 0.5 * std::pow(currentVf, 2) / DAcceptable;
 	}
 	else {
-		dxF = currentVf * deltaT - 0.5 * Deceleration->Acceptable * std::pow(deltaT, 2);
+		dxF = currentVf * deltaT - 0.5 * DAcceptable * std::pow(deltaT, 2);
 	}
-	const double tPedalChange = PedalChange->GetAccelToBrakeTime(car, v);
-	const double expectedGClosest = v * tPedalChange + 0.5 * std::pow(v, 2) / Deceleration->Strong - 0.5 * std::pow(vf, 2) / Deceleration->Acceptable + car->Driver->Eigen->G->Closest;
-	const double expectedG = car->Moment->g->gap + dxF - dx;
+	const double& tPedalChange = PedalChange->GetAccelToBrakeTime(car, v);
+	const double&& expectedGClosest = v * tPedalChange + 0.5 * std::pow(v, 2) / Deceleration->Strong - 0.5 * std::pow(vf, 2) / DAcceptable + driverEigen->G->Closest;
+	const double&& expectedG = carMoment->g->gap + dxF - dx;
 
 	if (expectedG < expectedGClosest) {
 		return true;
@@ -55,15 +58,20 @@ bool AvoidCollisionPackage::IsEmergency(const CarStruct* const car) const {
 	Calculate a_emergency of Eq.(4-12).
 */
 double AvoidCollisionPackage::GetEmergencyAcceleration(const CarStruct* const car) const {
+	const CarElements::MomentValues* const carMoment = car->Moment;
+	const DriverStruct* const driver = car->Driver;
+	const DriverElements::EigenValues* const driverEigen = driver->Eigen;
+	const DriverElements::EigenValuesElements::AccelerationSeries* const Deceleration = driverEigen->A->Deceleration;
+
 	double dxFront;
 	double nextA;
-	switch (car->Driver->Moment->pedal->foot) {
-	case FootPosition::Brake:
-		dxFront = 0.5 * std::pow(car->Moment->arround->front->v, 2) / car->Driver->Eigen->A->Deceleration->Acceptable;
-		nextA = -0.5 * std::pow(car->Moment->v, 2) / (car->Moment->g->gap + dxFront - car->Driver->Eigen->G->Closest);
+	switch (driver->Moment->pedal->footPosition) {
+	case FootPositionType::Brake:
+		dxFront = 0.5 * std::pow(carMoment->arround->front->v, 2) / Deceleration->Acceptable;
+		nextA = -0.5 * std::pow(carMoment->v, 2) / (carMoment->g->gap + dxFront - driverEigen->G->Closest);
 		break;
 	default:
-		nextA = -car->Driver->Eigen->A->Deceleration->Strong;
+		nextA = -Deceleration->Strong;
 		break;
 	}
 	return nextA;

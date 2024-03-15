@@ -25,22 +25,22 @@ void StatisticsParametersClass::InitializeProperties(StatisticsParametersClass* 
 	MeasurementEndX(std::bind(&StatisticsParametersClass::Get_MeasurementEndX, thisPtr));
 }
 
-int StatisticsParametersClass::Get_UnitMeasurementTime() const {
+const int& StatisticsParametersClass::Get_UnitMeasurementTime() const {
 	return _unitMeasurementTime;
 }
 
-int StatisticsParametersClass::Get_NumberOfMeasurements() const {
+const int& StatisticsParametersClass::Get_NumberOfMeasurements() const {
 	return _numberOfMeasurements;
 }
 
-double StatisticsParametersClass::Get_MeasurementLength() const {
+const double& StatisticsParametersClass::Get_MeasurementLength() const {
 	return _measurementLength;
 }
 
-double StatisticsParametersClass::Get_MeasurementStartX() const {
+const double& StatisticsParametersClass::Get_MeasurementStartX() const {
 	return _measurementStartX;
 }
 
-double StatisticsParametersClass::Get_MeasurementEndX() const {
+const double& StatisticsParametersClass::Get_MeasurementEndX() const {
 	return _measurementEndX;
 }

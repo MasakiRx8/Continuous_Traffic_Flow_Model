@@ -20,21 +20,24 @@
 
 class ModelBaseClass {
 public:
-	ModelBaseClass(const int& N, const ModelParametersClass& ModelParameters, const StatisticsParametersClass& statisticsParameters);	//This constructor is only called by "AdvanceTimeAndMeasureClass".
+	ModelBaseClass(const int& RunNumber, const int& N, const ModelParametersClass& ModelParameters, const StatisticsParametersClass& StatisticsParameters);	//This constructor is only called by "AdvanceTimeAndMeasureClass".
 	ModelBaseClass(const ModelBaseClass* const baseClass);	//This copy constructor is called from anything other than "AdvanceTimeAndMeasureClass".
 	~ModelBaseClass();	//destructor
 protected:
 	const int N;
 	const ModelParametersClass& ModelParameters;
-	const StatisticsParametersClass& statisticsParameters;
-	std::vector<CarStruct*>* cars;
-	Random* random;
+	const StatisticsParametersClass& StatisticsParameters;
+	std::vector<CarStruct*>* const cars;
+	const Random* const random;
 private:
 	enum CalledBy {
 		Constructor
 		, Others
 	};
 	CalledBy calledBy;
+
+	bool deletedCars;
+	bool deletedRandom;
 };
 
 #endif // !MODELBASECLASS_H

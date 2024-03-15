@@ -54,7 +54,7 @@ namespace CarElements {
 		Common::EigenValuesElements::PlusMinus* const Amax;
 		double AResistance;
 		double Length;
-		DriverMode DriverMode;
+		DriverModeType DriverMode;
 		EigenValues();
 		~EigenValues();
 	private:

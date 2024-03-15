@@ -19,17 +19,17 @@ private:
 
 	void InitializeProperties(StatisticsParametersClass* const thisPtr);
 
-	int Get_UnitMeasurementTime() const;
-	int Get_NumberOfMeasurements() const;
-	double Get_MeasurementLength() const;
-	double Get_MeasurementStartX() const;
-	double Get_MeasurementEndX() const;
+	const int& Get_UnitMeasurementTime() const;
+	const int& Get_NumberOfMeasurements() const;
+	const double& Get_MeasurementLength() const;
+	const double& Get_MeasurementStartX() const;
+	const double& Get_MeasurementEndX() const;
 public:
-	ReadOnlyPropertyClass<int> UnitMeasurementTime;
-	ReadOnlyPropertyClass<int> NumberOfMeasurements;
-	ReadOnlyPropertyClass<double> MeasurementLength;
-	ReadOnlyPropertyClass<double> MeasurementStartX;
-	ReadOnlyPropertyClass<double> MeasurementEndX;
+	ReadOnlyPropertyClass<const int&> UnitMeasurementTime;
+	ReadOnlyPropertyClass<const int&> NumberOfMeasurements;
+	ReadOnlyPropertyClass<const double&> MeasurementLength;
+	ReadOnlyPropertyClass<const double&> MeasurementStartX;
+	ReadOnlyPropertyClass<const double&> MeasurementEndX;
 };
 
 #endif // !STATISTICSPARAMETERSCLASS_H

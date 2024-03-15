@@ -6,9 +6,9 @@
 #include "InitializerClass.h"
 
 //constructor
-InitializerClass::InitializerClass(const ModelBaseClass* myBase, const std::string& IniFileFolderPath, const int& IniFileNumber) : ModelBaseClass(myBase) {
+InitializerClass::InitializerClass(const std::string& IniFileFolderPath, const int& IniFileNumber, const ModelBaseClass* myBase) : ModelBaseClass(myBase) {
 	InitializeProperties(this);
-	ReadIniFile = new ReadIniFilePackage(IniFileFolderPath + R"(\Ini)" + std::to_string(IniFileNumber) + ".ini");
+	ReadIniFile = new ReadIniFilePackage(IniFileFolderPath + R"(/Ini)" + std::to_string(IniFileNumber) + ".ini");
 }
 
 //destructor
@@ -43,40 +43,41 @@ void InitializerClass::InitializeCarsAndDrivers() {
 		//Car
 		CarStruct* const car = (*cars)[i];
 		car->ID = i;
-		CarElements::EigenValues* const carE = car->Eigen;
+		CarElements::EigenValues* const carEigen = car->Eigen;
+		CarElements::MomentValues* const carMoment = car->Moment;
 
-		carE->Vmax = Calculate_Km_h_To_m_s(ReadIniFile->ReadIni("Car Informations", "Vmax"));
-		carE->Amax->Plus = Calculate_Km_h_To_m_s(ReadIniFile->ReadIni("Car Informations", "A^+_max_V")) / ReadIniFile->ReadIni("Car Informations", "A^+_max_s");
-		carE->Amax->Minus = std::pow(Calculate_Km_h_To_m_s(ReadIniFile->ReadIni("Car Informations", "A^-_max_V")), 2) / 2 / ReadIniFile->ReadIni("Car Informations", "A^-_max_D");
-		carE->AResistance = Calculate_Km_h_To_m_s(ReadIniFile->ReadIni("Car Informations", "A^-_resistence"));
-		carE->Length = ReadIniFile->ReadIni("Car Informations", "Length");
-		ReadIniFile->ReadIni("Car Informations", "Driver", sModeType, ReadIniFilePackage::TransformMode::Lower);
+		carEigen->Vmax = Calculate_Km_h_To_m_s(ReadIniFile->ReadIni("Car Informations", "Vmax"));
+		carEigen->Amax->Plus = Calculate_Km_h_To_m_s(ReadIniFile->ReadIni("Car Informations", "A^+_max_V")) / ReadIniFile->ReadIni("Car Informations", "A^+_max_s");
+		carEigen->Amax->Minus = std::pow(Calculate_Km_h_To_m_s(ReadIniFile->ReadIni("Car Informations", "A^-_max_V")), 2) / 2 / ReadIniFile->ReadIni("Car Informations", "A^-_max_D");
+		carEigen->AResistance = Calculate_Km_h_To_m_s(ReadIniFile->ReadIni("Car Informations", "A^-_resistence"));
+		carEigen->Length = ReadIniFile->ReadIni("Car Informations", "Length");
+		ReadIniFile->ReadIni("Car Informations", "Driver", sModeType, ReadIniFilePackage::TransformModeType::Lower);
 		if (sModeType == "auto") {
-			carE->DriverMode = DriverMode::Auto;
+			carEigen->DriverMode = DriverModeType::Auto;
 		}
 		else {
-			carE->DriverMode = DriverMode::Human;
+			carEigen->DriverMode = DriverModeType::Human;
 		}
 
-		CarElements::MomentValues* const carM = car->Moment;
-		carM->a = 0;
-		carM->v = 0;
+		carMoment->a = 0;
+		carMoment->v = 0;
 
 		//Driver
 		DriverStruct* const driver = car->Driver;
-		DriverElements::EigenValues* const driverE = driver->Eigen;
-		DriverElements::MomentValues* const driverM = driver->Moment;
-		DriverElements::EigenValuesElements::AccelerationSeries* const Acceleration = driver->Eigen->A->Acceleration;
-		DriverElements::EigenValuesElements::AccelerationSeries* const Deceleration = driver->Eigen->A->Deceleration;
-		DriverElements::EigenValuesElements::AccelerationSeries* const FrontDeceleration = driver->Eigen->A->FrontDeceleration;
-		DriverElements::EigenValuesElements::VSerise* const V = driverE->V;
-		DriverElements::EigenValuesElements::PedalChangingTimeInformations* const PedalChange = driverE->PedalChange;
-		DriverElements::EigenValuesElements::TMargin* const TMargin = driverE->TMargin;
-		Common::EigenValuesElements::GSerise* const G = driverE->G;
+		DriverElements::EigenValues* const driverEigen = driver->Eigen;
+		DriverElements::MomentValues* const driverMoment = driver->Moment;
+		DriverElements::EigenValuesElements::AccelerationPackage* const driverEigenA = driverEigen->A;
+		DriverElements::EigenValuesElements::AccelerationSeries* const Acceleration = driverEigenA->Acceleration;
+		DriverElements::EigenValuesElements::AccelerationSeries* const Deceleration = driverEigenA->Deceleration;
+		DriverElements::EigenValuesElements::AccelerationSeries* const FrontDeceleration = driverEigenA->FrontDeceleration;
+		DriverElements::EigenValuesElements::VSerise* const V = driverEigen->V;
+		DriverElements::EigenValuesElements::PedalChangingTimeInformations* const PedalChange = driverEigen->PedalChange;
+		DriverElements::EigenValuesElements::TMargin* const TMargin = driverEigen->TMargin;
+		Common::EigenValuesElements::GSerise* const G = driverEigen->G;
 
 		Deceleration->Acceptable = ReadIniFile->ReadIni("Driver Informations::A", "A^-_acceptable");
 
-		ReadIniFile->ReadIni("Driver Informations::A", "A^+_acceptable_mode", sModeType, ReadIniFilePackage::TransformMode::Lower);
+		ReadIniFile->ReadIni("Driver Informations::A", "A^+_acceptable_mode", sModeType, ReadIniFilePackage::TransformModeType::Lower);
 		if (sModeType == "equal") {
 			Acceleration->Acceptable = Calculate_Km_h_To_m_s(ReadIniFile->ReadIni("Driver Informations::A", "A^+_acceptable_V")) / ReadIniFile->ReadIni("Driver Informations::A", "A^+_acceptable_s");
 		}
@@ -86,7 +87,7 @@ void InitializerClass::InitializeCarsAndDrivers() {
 			Acceleration->Acceptable = Calculate_Km_h_To_m_s(ReadIniFile->ReadIni("Driver Informations::A", "A^+_acceptable_V")) / (*random)(mVal, pVal);
 		}
 
-		ReadIniFile->ReadIni("Driver Informations::A", "A^-_strong_mode", sModeType, ReadIniFilePackage::TransformMode::Lower);
+		ReadIniFile->ReadIni("Driver Informations::A", "A^-_strong_mode", sModeType, ReadIniFilePackage::TransformModeType::Lower);
 		if (sModeType == "equal") {
 			Deceleration->Strong = ReadIniFile->ReadIni("Driver Informations::A", "A^-_strong");
 		}
@@ -96,7 +97,7 @@ void InitializerClass::InitializeCarsAndDrivers() {
 			Deceleration->Strong = (*random)(mVal, pVal);
 		}
 
-		ReadIniFile->ReadIni("Driver Informations::A", "A^-_normal_mode", sModeType, ReadIniFilePackage::TransformMode::Lower);
+		ReadIniFile->ReadIni("Driver Informations::A", "A^-_normal_mode", sModeType, ReadIniFilePackage::TransformModeType::Lower);
 		if (sModeType == "equal") {
 			Deceleration->Normal = ReadIniFile->ReadIni("Driver Informations::A", "A^-_normal");
 		}
@@ -106,7 +107,7 @@ void InitializerClass::InitializeCarsAndDrivers() {
 			Deceleration->Normal = (*random)(mVal, pVal);
 		}
 
-		ReadIniFile->ReadIni("Driver Informations::A", "A^-_Fnormal_mode", sModeType, ReadIniFilePackage::TransformMode::Lower);
+		ReadIniFile->ReadIni("Driver Informations::A", "A^-_Fnormal_mode", sModeType, ReadIniFilePackage::TransformModeType::Lower);
 		if (sModeType == "equal") {
 			FrontDeceleration->Normal = ReadIniFile->ReadIni("Driver Informations::A", "A^-_Fnormal");
 		}
@@ -115,46 +116,66 @@ void InitializerClass::InitializeCarsAndDrivers() {
 			mVal = ReadIniFile->ReadIni("Driver Informations::A", "A^-_Fnormal^-");
 			FrontDeceleration->Normal = (*random)(mVal, pVal);
 		}
-		driverM->a = 0;
-		driverM->R->velocity = 1 - (*random)(1.0);
-		driverM->R->gap = 1 - (*random)(1.0);
+		driverMoment->a = 0;
+		driverMoment->R->velocity = 1 - (*random)(1.0);
+		driverMoment->R->gap = 1 - (*random)(1.0);
 
-		ReadIniFile->ReadIni("Driver Informations::Fg", "Fg_mode", sModeType, ReadIniFilePackage::TransformMode::Lower);
+		ReadIniFile->ReadIni("Driver Informations::Fg", "Fg_mode", sModeType, ReadIniFilePackage::TransformModeType::Lower);
 		if (sModeType == "equal") {
-			driverM->g->SetBaseNg(ReadIniFile->ReadIni("Driver Informations::Fg", "randomValue"));
+			driverMoment->g->SetBaseNg(ReadIniFile->ReadIni("Driver Informations::Fg", "randomValue"));
 		}
 		else {
 			pVal = ReadIniFile->ReadIni("Driver Informations::Fg", "randomValue^+");
 			mVal = ReadIniFile->ReadIni("Driver Informations::Fg", "randomValue^-");
-			driverM->g->SetBaseNg((*random)(mVal, pVal));
+			driverMoment->g->SetBaseNg((*random)(mVal, pVal));
 		}
 
+		Common::EigenValuesElements::PlusMinus* const DeltaAtCruise = V->DeltaAtCruise;
+		Common::EigenValuesElements::PlusMinus* const DeltaAt0 = V->DeltaAt0;
 		V->Cruise = Calculate_Km_h_To_m_s(ReadIniFile->ReadIni("Driver Informations::V", "V_cruise"));
-		V->DeltaAtCruise->Plus = Calculate_Km_h_To_m_s(ReadIniFile->ReadIni("Driver Informations::V", "deltaV^+_cruise"));
-		V->DeltaAtCruise->Minus = Calculate_Km_h_To_m_s(ReadIniFile->ReadIni("Driver Informations::V", "deltaV^-_cruise"));
-		V->DeltaAt0->Plus = Calculate_Km_h_To_m_s(ReadIniFile->ReadIni("Driver Informations::V", "deltaV^+_0"));
-		V->DeltaAt0->Minus = Calculate_Km_h_To_m_s(ReadIniFile->ReadIni("Driver Informations::V", "deltaV^-_0"));
+		DeltaAtCruise->Plus = Calculate_Km_h_To_m_s(ReadIniFile->ReadIni("Driver Informations::V", "deltaV^+_cruise"));
+		DeltaAtCruise->Minus = Calculate_Km_h_To_m_s(ReadIniFile->ReadIni("Driver Informations::V", "deltaV^-_cruise"));
+		DeltaAt0->Plus = Calculate_Km_h_To_m_s(ReadIniFile->ReadIni("Driver Informations::V", "deltaV^+_0"));
+		DeltaAt0->Minus = Calculate_Km_h_To_m_s(ReadIniFile->ReadIni("Driver Informations::V", "deltaV^-_0"));
 
-		PedalChange->V->AccelToBrake->Upper = Calculate_Km_h_To_m_s(ReadIniFile->ReadIni("Driver Informations::Pedal Change", "V^+_ab"));
-		PedalChange->V->AccelToBrake->Lower = Calculate_Km_h_To_m_s(ReadIniFile->ReadIni("Driver Informations::Pedal Change", "V^-_ab"));
-		PedalChange->T->AccelToBrake->Upper = ReadIniFile->ReadIni("Driver Informations::Pedal Change", "T^+_ab");
-		PedalChange->T->AccelToBrake->Lower = ReadIniFile->ReadIni("Driver Informations::Pedal Change", "T^-_ab");
-		PedalChange->V->BrakeToAccel->Upper = Calculate_Km_h_To_m_s(ReadIniFile->ReadIni("Driver Informations::Pedal Change", "V^+_ba"));
-		PedalChange->V->BrakeToAccel->Lower = Calculate_Km_h_To_m_s(ReadIniFile->ReadIni("Driver Informations::Pedal Change", "V^-_ba"));
-		PedalChange->T->BrakeToAccel->Upper = ReadIniFile->ReadIni("Driver Informations::Pedal Change", "T^+_ba");
-		PedalChange->T->BrakeToAccel->Lower = ReadIniFile->ReadIni("Driver Informations::Pedal Change", "T^-_ba");
+		//Set Vcruise as the target velocity.
+		DriverElements::MomentValuesElements::VSerise* const v = driverMoment->v;
+		Common::MomentValuesElements::CurrentLast* const deltaV = v->deltaV;
+		Common::MomentValuesElements::PlusMinus* const delta = v->delta;
+		v->target = V->Cruise;
+		deltaV->current = -V->Cruise;
+		deltaV->last = -V->Cruise;
+		delta->plus = DeltaAtCruise->Plus;
+		delta->minus = DeltaAtCruise->Minus;
 
-		TMargin->V->Upper = Calculate_Km_h_To_m_s(ReadIniFile->ReadIni("Driver Informations::Margin", "V^+_margin"));
-		TMargin->V->Lower = Calculate_Km_h_To_m_s(ReadIniFile->ReadIni("Driver Informations::Margin", "V^-_margin"));
-		TMargin->T->Upper = ReadIniFile->ReadIni("Driver Informations::Margin", "T^+_margin");
-		TMargin->T->Lower = ReadIniFile->ReadIni("Driver Informations::Margin", "T^-_margin");
+		DriverElements::EigenValuesElements::PedalChanging* const PedalChangeV = PedalChange->V;
+		DriverElements::EigenValuesElements::PedalChanging* const PedalChangeT = PedalChange->T;
+		Common::EigenValuesElements::UpperLower* const VAccelToBrake = PedalChangeV->AccelToBrake;
+		Common::EigenValuesElements::UpperLower* const VBrakeToAccel = PedalChangeV->BrakeToAccel;
+		Common::EigenValuesElements::UpperLower* const TAccelToBrake = PedalChangeT->AccelToBrake;
+		Common::EigenValuesElements::UpperLower* const TBrakeToAccel = PedalChangeT->BrakeToAccel;
+		VAccelToBrake->Upper = Calculate_Km_h_To_m_s(ReadIniFile->ReadIni("Driver Informations::Pedal Change", "V^+_ab"));
+		VAccelToBrake->Lower = Calculate_Km_h_To_m_s(ReadIniFile->ReadIni("Driver Informations::Pedal Change", "V^-_ab"));
+		TAccelToBrake->Upper = ReadIniFile->ReadIni("Driver Informations::Pedal Change", "T^+_ab");
+		TAccelToBrake->Lower = ReadIniFile->ReadIni("Driver Informations::Pedal Change", "T^-_ab");
+		VBrakeToAccel->Upper = Calculate_Km_h_To_m_s(ReadIniFile->ReadIni("Driver Informations::Pedal Change", "V^+_ba"));
+		VBrakeToAccel->Lower = Calculate_Km_h_To_m_s(ReadIniFile->ReadIni("Driver Informations::Pedal Change", "V^-_ba"));
+		TBrakeToAccel->Upper = ReadIniFile->ReadIni("Driver Informations::Pedal Change", "T^+_ba");
+		TBrakeToAccel->Lower = ReadIniFile->ReadIni("Driver Informations::Pedal Change", "T^-_ba");
+
+		Common::EigenValuesElements::UpperLower* const TMarginV = TMargin->V;
+		Common::EigenValuesElements::UpperLower* const TMarginT = TMargin->T;
+		TMarginV->Upper = Calculate_Km_h_To_m_s(ReadIniFile->ReadIni("Driver Informations::Margin", "V^+_margin"));
+		TMarginV->Lower = Calculate_Km_h_To_m_s(ReadIniFile->ReadIni("Driver Informations::Margin", "V^-_margin"));
+		TMarginT->Upper = ReadIniFile->ReadIni("Driver Informations::Margin", "T^+_margin");
+		TMarginT->Lower = ReadIniFile->ReadIni("Driver Informations::Margin", "T^-_margin");
 
 		G->Closest = ReadIniFile->ReadIni("Driver Informations::G", "G_closest");
 		G->Cruise = ReadIniFile->ReadIni("Driver Informations::G", "G_cruise");
 		G->Influenced = ReadIniFile->ReadIni("Driver Informations::G", "G_influenced");
 		
-		allDclosest += driverE->G->Closest;
-		allCarLength += carE->Length;
+		allDclosest += driverEigen->G->Closest;
+		allCarLength += carEigen->Length;
 	}
 }
 
@@ -163,16 +184,38 @@ void InitializerClass::InitializeCarsAndDrivers() {
 */
 bool InitializerClass::InitializePosition() const {
 	//First, arrange them evenly.
-	bool success = EqualizeAllGap();
-	switch (ModelParameters.InitialPosition) {
-	case InitialPositionMode::Equal:
+	const bool&& success = EqualizeAllGap();
+	switch (ModelParameters.InitialPositionMode) {
+	case InitialPositionModeType::Equal:
 		break;
-	case InitialPositionMode::Random:
+	case InitialPositionModeType::Random:
 		//Next, select any vehicle in a random order and move the vehicle to a random position between the previous and following vehicles.
 		ChangePositionFromUniformToRandom();
 		break;
 	default:
 		break;
+	}
+
+	//Update all car's gap.
+	double frontX;
+	for (std::size_t i = 0; i < cars->size(); i++) {
+		const CarStruct* const car = (*cars)[i];
+		CarElements::MomentValues* const carMoment = car->Moment;
+		const CarElements::MomentValuesElements::ArroundCarInformations* const front = carMoment->arround->front;
+		const double& x = carMoment->x;
+		frontX = front->x;
+		if (frontX <= x) {
+			frontX += ModelParameters.L;
+		}
+		double&& gap = frontX - front->Length - x;
+
+		const Common::EigenValuesElements::GSerise* const G = car->Driver->Eigen->G;
+		CarElements::MomentValuesElements::GapSerise* const g = carMoment->g;
+		g->closest = G->Closest;
+		g->cruise = g->closest + G->Cruise;
+		g->influenced = g->cruise + G->Influenced;
+		g->gap = std::move(gap);
+		g->deltaGap->current = g->gap - g->cruise;
 	}
 
 	return success;
@@ -215,13 +258,14 @@ bool InitializerClass::EqualizeAllGap() const {
 			else {
 				rear = IDSort[i + 1];
 			}
-			car->Moment->x = x;
-			car->Moment->UpdateReferences();
+			CarElements::MomentValues* const carMoment = car->Moment;
+			carMoment->x = x;
+			carMoment->UpdateReferences();
 			x -= parGap + car->Eigen->Length;
 			if (x < 0) {
 				x += ModelParameters.L;
 			}
-			car->Moment->arround = new CarElements::MomentValuesElements::Arround((*cars)[rear], (*cars)[front]);	//Set pointers for the front and rear vehicles.
+			carMoment->arround = new CarElements::MomentValuesElements::Arround((*cars)[rear], (*cars)[front]);	//Set pointers for the front and rear vehicles.
 		}
 		return true;
 	}
@@ -240,34 +284,6 @@ void InitializerClass::ChangePositionFromUniformToRandom() const {
 	for (std::size_t i = 0; i < IDSort.size(); i++) {
 		MoveBetweenFrontAndRearCars(IDSort[i]);
 	}
-
-	double frontX;
-	double gap;
-	for (std::size_t i = 0; i < cars->size(); i++) {
-		const CarStruct* const car = (*cars)[i];
-		const CarElements::MomentValuesElements::ArroundCarInformations* const front = car->Moment->arround->front;
-		frontX = front->x;
-		if (frontX <= car->Moment->x) {
-			frontX += ModelParameters.L;
-		}
-		gap = frontX - front->Length - car->Moment->x;
-
-		const Common::EigenValuesElements::GSerise* const G = car->Driver->Eigen->G;
-		CarElements::MomentValuesElements::GapSerise* const g = car->Moment->g;
-		g->closest = G->Closest;
-		g->cruise = g->closest + G->Cruise;
-		g->influenced = g->cruise + G->Influenced;
-		g->gap = gap;
-		g->deltaGap->current = gap - g->cruise;
-
-		const DriverElements::EigenValuesElements::VSerise* const eigenV = car->Driver->Eigen->V;
-		DriverElements::MomentValuesElements::VSerise* const v = car->Driver->Moment->v;
-		v->deltaV->current = -eigenV->Cruise;
-		v->deltaV->last = -eigenV->Cruise;
-		v->delta->plus = eigenV->DeltaAtCruise->Plus;
-		v->delta->minus = eigenV->DeltaAtCruise->Minus;
-		v->target = eigenV->Cruise;
-	}
 }
 
 /*
@@ -276,12 +292,14 @@ void InitializerClass::ChangePositionFromUniformToRandom() const {
 void InitializerClass::MoveBetweenFrontAndRearCars(const std::size_t& ID) const {
 	//Find the range of movement forward and backward.
 	const CarStruct* car = (*cars)[ID];
-	const CarElements::MomentValuesElements::ArroundCarInformations* front = car->Moment->arround->front;
-	const CarElements::MomentValuesElements::ArroundCarInformations* rear = car->Moment->arround->rear;
-	const double x = car->Moment->x;
+	CarElements::MomentValues* const carMoment = car->Moment;
+	const CarElements::MomentValuesElements::Arround* const arround = carMoment->arround;
+	const CarElements::MomentValuesElements::ArroundCarInformations* front = arround->front;
+	const CarElements::MomentValuesElements::ArroundCarInformations* rear = arround->rear;
+	const double& x = carMoment->x;
 	double frontX = front->x;
 	double rearX = rear->x;
-	if (frontX <= x) {
+	if (front->x <= x) {
 		frontX += ModelParameters.L;
 	}
 	frontX -= x;
@@ -290,14 +308,17 @@ void InitializerClass::MoveBetweenFrontAndRearCars(const std::size_t& ID) const 
 	}
 	rearX -= x;
 
-	const double xMax = frontX - front->Length - car->Driver->Eigen->G->Closest;
-	const double xMin = rearX + (*cars)[rear->ID]->Driver->Eigen->G->Closest + car->Eigen->Length;
-	double nextX = (xMax - xMin) * (*random)(1.0) + xMin + x;	//>=0
+	const double&& xMax = frontX - front->Length - car->Driver->Eigen->G->Closest;
+	const double&& xMin = rearX + (*cars)[rear->ID]->Driver->Eigen->G->Closest + car->Eigen->Length;
+	double&& nextX = (xMax - xMin) * (*random)(1.0) + xMin + x;
 	if (nextX >= ModelParameters.L) {
 		nextX -= ModelParameters.L;
 	}
-	car->Moment->x = nextX;
-	car->Moment->UpdateReferences();
+	else if (nextX < 0) {
+		nextX += ModelParameters.L;
+	}
+	carMoment->x = std::move(nextX);
+	carMoment->UpdateReferences();
 }
 
 void InitializerClass::InitializeProperties(InitializerClass* const thisPtr) {

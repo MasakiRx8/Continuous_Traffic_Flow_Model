@@ -17,13 +17,13 @@ private:
 
 	void InitializeProperties(StatisticsElementsClass* const thisPtr);
 
-	int Get_Counter() const;
-	double Get_K() const;
-	double Get_AverageVelocity() const;
+	const int& Get_Counter() const;
+	const double& Get_K() const;
+	const double& Get_AverageVelocity() const;
 public:
-	ReadOnlyPropertyClass<int> Counter;
-	ReadOnlyPropertyClass<double> K;
-	ReadOnlyPropertyClass<double> AverageVelocity;
+	ReadOnlyPropertyClass<const int&> Counter;
+	ReadOnlyPropertyClass<const double&> K;
+	ReadOnlyPropertyClass<const double&> AverageVelocity;
 
 	friend class StatisticsClass;	//open private parameters to class "StatisticsClass"
 };

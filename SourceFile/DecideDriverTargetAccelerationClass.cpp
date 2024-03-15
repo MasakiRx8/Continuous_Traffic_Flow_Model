@@ -6,19 +6,31 @@
 #include "DecideDriverTargetAccelerationClass.h"
 
 //constructor
-DecideDriverTargetAccelerationClass::DecideDriverTargetAccelerationClass(const ModelBaseClass* const baseClass) : ModelBaseClass(baseClass) {
-	VRecognition = new VRecognitionPackage();
-	GRecognition = new GRecognitionPackage(ModelParameters.deltaT, ModelParameters.L);
-	PedalChange = new PedalChangePackage(ModelParameters.deltaT);
-	AvoidCollision = new AvoidCollisionPackage(ModelParameters.deltaT);
+DecideDriverTargetAccelerationClass::DecideDriverTargetAccelerationClass(const PedalChangePackage* const PedalChange, const ModelBaseClass* const baseClass) 
+	: ModelBaseClass(baseClass)
+	, PedalChange(PedalChange)
+	, VRecognition(new VRecognitionPackage())
+	, GRecognition(new GRecognitionPackage(ModelParameters.deltaT, ModelParameters.L, PedalChange))
+	, AvoidCollision(new AvoidCollisionPackage(ModelParameters.deltaT)) {
+	deletedVRecognition = false;
+	deletedGRecognition = false;
+	deletedAvoidCollision = false;
 }
 
 //destructor
 DecideDriverTargetAccelerationClass::~DecideDriverTargetAccelerationClass() {
-	SafeDelete(VRecognition);	//delete VRecognitionPackage
-	SafeDelete(GRecognition);	//delete GRecognitionPackage
-	SafeDelete(PedalChange);	//delete PedalChangePackage
-	SafeDelete(AvoidCollision);	//delete AvoidCollisionPackage
+	if (!deletedVRecognition) {
+		delete VRecognition;	//delete VRecognitionPackage
+		deletedVRecognition = true;
+	}
+	if (!deletedGRecognition) {
+		delete GRecognition;	//delete GRecognitionPackage
+		deletedGRecognition = true;
+	}
+	if (!deletedAvoidCollision) {
+		delete AvoidCollision;	//delete AvoidCollisionPackage
+		deletedAvoidCollision = true;
+	}
 }
 
 /*
@@ -26,22 +38,23 @@ DecideDriverTargetAccelerationClass::~DecideDriverTargetAccelerationClass() {
 */
 void DecideDriverTargetAccelerationClass::DecideDriverTargetAcceleration(const CarStruct* const car) {
 	//Calculate by Eq.(4-12)
-	bool recognitionHit;
-	double nextA;
 	const DriverStruct* const driver = car->Driver;
-
-	Common::MomentValuesElements::VelocityGap* const R = driver->Moment->R;
+	DriverElements::MomentValues* const driverMoment = driver->Moment;
+	DriverElements::MomentValuesElements::VSerise* const driverMomentV = driverMoment->v;
+	Common::MomentValuesElements::VelocityGap* const R = driverMoment->R;
+	Common::MomentValuesElements::CurrentLast* const deltaV = driverMomentV->deltaV;
+	bool& recognitionHit = driverMoment->recognitionHit;
+	bool& emergency = driverMoment->g->emergency;
 	recognitionHit = false;
+	emergency = false;
 
 	//First, calculate the g series.
 	GRecognition->CalculateGSerise(car);
 	if (AvoidCollision->IsEmergency(car)) {
-		driver->Moment->g->emergency = true;
-		recognitionHit = true;
+		emergency = true;
 	}
 	else {
-		driver->Moment->g->emergency = false;
-		if (car->Eigen->DriverMode == DriverMode::Human) {
+		if (car->Eigen->DriverMode == DriverModeType::Human) {
 			//Calculate Zg by Eq.(4-6)
 			if (R->gap <= GRecognition->Calculate_Zg(car)) {
 				recognitionHit = true;
@@ -53,29 +66,27 @@ void DecideDriverTargetAccelerationClass::DecideDriverTargetAcceleration(const C
 			recognitionHit = true;
 		}
 	}
-	if (recognitionHit) {
+	if (recognitionHit || emergency) {
 		//Recalculate v_target by Eq.(4-11)
-		if (car->Eigen->DriverMode == DriverMode::Human) {
+		if (car->Eigen->DriverMode == DriverModeType::Human) {
 			R->gap = 1 - (*random)(1.0);
 		}
 		VRecognition->CalculateVSerise(GRecognition->Calculate_fg(car), car);
-		driver->Moment->recognitionHit = true;
 	}
-	driver->Moment->v->deltaV->CopyCurrentToLast();	//Copy deltaV of current to last  before updating current it.
-	driver->Moment->v->deltaV->current = car->Moment->v - driver->Moment->v->target;
+	deltaV->CopyCurrentToLast();	//Copy deltaV of current to last  before updating current it.
+	deltaV->current = car->Moment->v - driverMomentV->target;
 	if (!recognitionHit) {
 		//Calculate Zv by Eq.(4-3)
 		if (R->velocity <= VRecognition->Calculate_Zv(car)) {
 			R->velocity = 1 - (*random)(1.0);
-			driver->Moment->recognitionHit = true;
 			recognitionHit = true;
 		}
 	}
 	//Determine the target acceleration of the next time step.
-	if (recognitionHit) {
-		nextA = CalculateNextA(car);
+	if (recognitionHit || emergency) {
+		double&& nextA = CalculateNextA(car);
 		PedalChange->UpdatePedalChangingInformations(car, nextA);
-		driver->Moment->a = nextA;
+		driverMoment->a = std::move(nextA);
 	}
 }
 
@@ -84,25 +95,29 @@ void DecideDriverTargetAccelerationClass::DecideDriverTargetAcceleration(const C
 */
 double DecideDriverTargetAccelerationClass::CalculateNextA(const CarStruct* const car) {
 	double nextA;
-	const double fv = VRecognition->Calculate_fv(car);
-	const CarElements::MomentValuesElements::GapSerise* const g = car->Moment->g;
+	const double&& fv = VRecognition->Calculate_fv(car);
+	const CarElements::MomentValues* const carMoment = car->Moment;
+	const CarElements::MomentValuesElements::GapSerise* const g = carMoment->g;
+	const DriverStruct* const driver = car->Driver;
+	const DriverElements::MomentValues* const driverMoment = driver->Moment;
+	const DriverElements::EigenValuesElements::AccelerationPackage* const driverEigenA = driver->Eigen->A;
+	const DriverElements::EigenValuesElements::AccelerationSeries* const Acceleration = driverEigenA->Acceleration;
+	const DriverElements::EigenValuesElements::AccelerationSeries* const Deceleration = driverEigenA->Deceleration;
 
-	if (car->Driver->Moment->g->emergency) {
+	if (driverMoment->g->emergency) {
 		//Calculated by Eq.(4-12).
 		nextA = AvoidCollision->GetEmergencyAcceleration(car);
 	}
 	else {
 		//Calculated by Eq.(3-13).
 		if (g->gap < g->closest) {
-			nextA = -car->Driver->Eigen->A->Deceleration->Acceptable;
+			nextA = -Deceleration->Acceptable;
 		}
 		else {
 			double amax;
-			const double fg = GRecognition->Calculate_fg(car);
-			const DriverElements::EigenValuesElements::AccelerationSeries* const Acceleration = car->Driver->Eigen->A->Acceleration;
-			const DriverElements::EigenValuesElements::AccelerationSeries* const Deceleration = car->Driver->Eigen->A->Deceleration;
-			if (car->Driver->Moment->v->target >= car->Moment->v) {
-				const double frontA = car->Moment->arround->front->a;
+			const double&& fg = GRecognition->Calculate_fg(car);
+			if (driverMoment->v->target >= carMoment->v) {
+				const double& frontA = carMoment->arround->front->a;
 				if (g->gap <= g->cruise) {
 					amax = frontA * (1 - fg);
 				}

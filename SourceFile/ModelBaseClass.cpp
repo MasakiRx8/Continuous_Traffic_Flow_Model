@@ -9,20 +9,23 @@
 /*
 	This constructor is only called by "AdvanceTimeAndMeasureClass".
 */
-ModelBaseClass::ModelBaseClass(const int& N, const ModelParametersClass& ModelParameters, const StatisticsParametersClass& statisticsParameters)
-	: N(N), ModelParameters(ModelParameters), statisticsParameters(statisticsParameters) {
+ModelBaseClass::ModelBaseClass(const int& RunNumber, const int& N, const ModelParametersClass& ModelParameters, const StatisticsParametersClass& StatisticsParameters)
+	: N(N), ModelParameters(ModelParameters), StatisticsParameters(StatisticsParameters)
+	, cars(new std::vector<CarStruct*>(N))
+	, random(new Random(RunNumber)) {
 	calledBy = CalledBy::Constructor;
-	cars = new std::vector<CarStruct*>(N);
-	random = new Random();
+	deletedCars = false;
+	deletedRandom = false;
 }
 
 /*
 	This copy constructor is called from anything other than "AdvanceTimeAndMeasureClass".
 */
-ModelBaseClass::ModelBaseClass(const ModelBaseClass* const baseClass) : N(baseClass->N), ModelParameters(baseClass->ModelParameters), statisticsParameters(baseClass->statisticsParameters) {
+ModelBaseClass::ModelBaseClass(const ModelBaseClass* const baseClass)
+	: N(baseClass->N), ModelParameters(baseClass->ModelParameters), StatisticsParameters(baseClass->StatisticsParameters)
+	, cars(baseClass->cars)
+	, random(baseClass->random) {
 	calledBy = CalledBy::Others;
-	this->cars = baseClass->cars;
-	this->random = baseClass->random;
 }
 
 //destructor
@@ -32,8 +35,14 @@ ModelBaseClass::~ModelBaseClass() {
 		for (std::size_t i = 0; i < cars->size(); i++) {
 			SafeDelete((*cars)[i]);	//delete CarStruct
 		}
-		SafeDelete(cars);	//delete vector
-		SafeDelete(random);	//delete Random
+		if (!deletedCars) {
+			delete cars;	//delete vector
+			deletedCars = true;
+		}
+		if (!deletedRandom) {
+			delete random;	//delete Random
+			deletedRandom = true;
+		}
 		break;
 	case ModelBaseClass::Others:
 		break;

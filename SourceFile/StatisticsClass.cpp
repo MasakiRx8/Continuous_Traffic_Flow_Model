@@ -6,9 +6,9 @@
 #include "StatisticsClass.h"
 
 //constructor
-StatisticsClass::StatisticsClass(const int& N, const double& globalK, const StatisticsParametersClass& statisticsParameters)
-	: N(N), globalK(globalK), statisticsParameters(statisticsParameters)
-	, Global(new StatisticsElementsClass()), Local(new StatisticsElementsArray(std::size_t(statisticsParameters.NumberOfMeasurements))) {
+StatisticsClass::StatisticsClass(const int& N, const double& globalK, const StatisticsParametersClass& StatisticsParameters)
+	: N(N), globalK(globalK), StatisticsParameters(StatisticsParameters)
+	, Global(new StatisticsElementsClass()), Local(new StatisticsElementsArray(std::size_t(StatisticsParameters.NumberOfMeasurements))) {
 	addingNumber = 0;
 	sumGlobal_dX = 0;
 	Reset();
@@ -49,8 +49,8 @@ void StatisticsClass::CalculateAndAddLocalStatistics() {
 		k = 0;
 	}
 	else {
-		av = statisticsParameters.MeasurementLength * counter / sumMeasurementSectionTransitTime;
-		k = 1000 / statisticsParameters.UnitMeasurementTime * counter / av;
+		av = StatisticsParameters.MeasurementLength * counter / sumMeasurementSectionTransitTime;
+		k = 1000 / StatisticsParameters.UnitMeasurementTime * counter / av;
 	}
 	StatisticsElementsClass* const local = (*Local->vStattisticsElements)[addingNumber];
 	local->_counter = counter;
@@ -62,5 +62,5 @@ void StatisticsClass::CalculateAndAddLocalStatistics() {
 void StatisticsClass::CalculateAndSetGlobalStatistics() {
 	Global->_counter = 0;
 	Global->_k = globalK;
-	Global->_averageVelocity = sumGlobal_dX / (statisticsParameters.NumberOfMeasurements * statisticsParameters.UnitMeasurementTime * N);
+	Global->_averageVelocity = sumGlobal_dX / (StatisticsParameters.NumberOfMeasurements * StatisticsParameters.UnitMeasurementTime * N);
 }

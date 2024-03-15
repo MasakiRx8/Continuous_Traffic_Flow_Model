@@ -15,14 +15,20 @@ VRecognitionPackage::~VRecognitionPackage() {  }
 */
 void VRecognitionPackage::CalculateVSerise(const double& fg, const CarStruct* const car) const {
 	//Calculate by Eq.(4-11) and Eq.(3-11).
-	const double VCruise = car->Driver->Eigen->V->Cruise;
-	const double vFront = car->Moment->arround->front->v;
+	const DriverStruct* const driver = car->Driver;
+	const DriverElements::EigenValuesElements::VSerise* const driverEigenV = driver->Eigen->V;
+	const DriverElements::MomentValues* const driverMoment = driver->Moment;
+	const CarElements::MomentValues* const carMoment = car->Moment;
+	const CarElements::MomentValuesElements::GapSerise* const g = carMoment->g;
+	const Common::EigenValuesElements::PlusMinus* const DeltaAtCruise = driverEigenV->DeltaAtCruise;
+	const Common::EigenValuesElements::PlusMinus* const DeltaAt0 = driverEigenV->DeltaAt0;
+	const double& VCruise = driverEigenV->Cruise;
+	const double& vFront = carMoment->arround->front->v;
+
+	DriverElements::MomentValuesElements::VSerise* const vSerise = driverMoment->v;
 	double nextTarget;
-	const CarElements::MomentValuesElements::GapSerise* const g = car->Moment->g;
-	const Common::EigenValuesElements::PlusMinus* const DeltaAtCruise = car->Driver->Eigen->V->DeltaAtCruise;
-	const Common::EigenValuesElements::PlusMinus* const DeltaAt0 = car->Driver->Eigen->V->DeltaAt0;
-	DriverElements::MomentValuesElements::VSerise* const vSerise = car->Driver->Moment->v;
-	if (car->Driver->Moment->g->emergency) {
+
+	if (driverMoment->g->emergency) {
 		nextTarget = vFront;
 	}
 	else {
@@ -47,16 +53,17 @@ void VRecognitionPackage::CalculateVSerise(const double& fg, const CarStruct* co
 double VRecognitionPackage::Calculate_Zv(const CarStruct* const car) const {
 	const Common::MomentValuesElements::CurrentLast* const deltaV = car->Driver->Moment->v->deltaV;
 	const Common::MomentValuesElements::PlusMinus* const delta = car->Driver->Moment->v->delta;
-	const double Nvt = GetNv(car, 0);	//The secondly argument of 0 that means delta v = -v_target(t), because the function GetNv's argument is the current velocity, not delta v.
-	const double Av = (delta->minus + delta->plus) * log(1 + exp(1 / kappa)) - delta->minus * log(1 + exp(-Nvt / kappa));
-	const double v = car->Moment->v;
-	const double vTarget = car->Driver->Moment->v->target;
+	const double&& Nvt = GetNv(car, 0);	//The secondly argument of 0 that means delta v equal -v_target(t), because the function GetNv's argument is the current velocity, not delta v.
+	const double&& Av = (delta->minus + delta->plus) * log(1 + exp(1 / kappa)) - delta->minus * log(1 + exp(-Nvt / kappa));
+	const double& v = car->Moment->v;
+	const double& vTarget = car->Driver->Moment->v->target;
+	const double&& Nv = GetNv(car, v);
 	double Zv;
 	if (v <= vTarget) {
-		Zv = delta->minus / Av * log((1 + exp(-GetNv(car, v) / kappa)) / (1 + exp(-Nvt / kappa)));
+		Zv = delta->minus / Av * log((1 + exp(-Nv / kappa)) / (1 + exp(-Nvt / kappa)));
 	}
 	else {
-		Zv = 1 - delta->plus / Av * log(1 + exp(-GetNv(car, v) / kappa));
+		Zv = 1 - delta->plus / Av * log(1 + exp(-Nv / kappa));
 	}
 	if (deltaV->current <= deltaV->last) {
 		Zv = 1 - Zv;

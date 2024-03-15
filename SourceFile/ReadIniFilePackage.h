@@ -15,7 +15,7 @@
 
 class ReadIniFilePackage {
 public:
-	enum class TransformMode {
+	enum class TransformModeType {
 		Original
 		, Upper
 		, Lower
@@ -27,7 +27,7 @@ public:
 	void ReadIni(const std::string& SectionName, const std::string& VariableName, int& val);
 	void ReadIni(const std::string& SectionName, const std::string& VariableName, double& val);
 	void ReadIni(const std::string& SectionName, const std::string& VariableName, std::string& val);
-	void ReadIni(const std::string& SectionName, const std::string& VariableName, std::string& val, const TransformMode& transformMode);
+	void ReadIni(const std::string& SectionName, const std::string& VariableName, std::string& val, const TransformModeType& transformMode);
 private:
 	struct ToUpper {
 		char operator()(const char& c);

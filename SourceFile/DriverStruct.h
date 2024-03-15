@@ -85,8 +85,8 @@ namespace DriverElements {
 			double needTime;
 			double timeElapsed;
 			bool changing;
-			FootPosition foot;
-			FootPosition targetFoot;
+			FootPositionType footPosition;
+			FootPositionType targetFootPosition;
 			NeedChangingTime* const t;
 			PedalInformations();
 			~PedalInformations();
