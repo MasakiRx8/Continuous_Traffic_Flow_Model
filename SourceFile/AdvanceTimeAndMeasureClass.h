@@ -9,9 +9,9 @@
 #include <sstream>
 #include "ReadOnlyPropertyClass.h"
 #include "ModelBaseClass.h"
+#include "InitializerClass.h"
 #include "DecideDriverTargetAccelerationClass.h"
 #include "UpdatePositionClass.h"
-#include "InitializerClass.h"
 
 class AdvanceTimeAndMeasureClass : public ModelBaseClass {
 public:

@@ -52,6 +52,7 @@ CarElements::EigenValues::EigenValues()
 	AResistance = 0;
 	Length = 0;
 	deletedAmax = false;
+	DriverMode = DriverModeType::Human;
 }
 
 CarElements::EigenValues::~EigenValues() {
@@ -94,6 +95,7 @@ CarStruct::CarStruct()
 	: Eigen(new CarElements::EigenValues())
 	, Moment(new CarElements::MomentValues())
 	, Driver(new DriverStruct()) { 
+	ID = -1;
 	deletedEigen = false;
 	deletedMoment = false;
 	deletedDriver = false;

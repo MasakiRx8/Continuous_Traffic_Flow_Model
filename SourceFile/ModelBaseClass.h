@@ -10,7 +10,6 @@
 #include <string>
 #include <vector>
 #include "random.h"
-#include "VectorSort.h"
 #include "Common.h"
 #include "ModelParametersClass.h"
 #include "StatisticsParametersClass.h"

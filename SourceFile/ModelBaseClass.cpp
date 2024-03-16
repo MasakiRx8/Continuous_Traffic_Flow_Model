@@ -26,6 +26,8 @@ ModelBaseClass::ModelBaseClass(const ModelBaseClass* const baseClass)
 	, cars(baseClass->cars)
 	, random(baseClass->random) {
 	calledBy = CalledBy::Others;
+	deletedCars = true;
+	deletedRandom = true;
 }
 
 //destructor

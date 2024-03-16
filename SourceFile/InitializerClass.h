@@ -6,6 +6,7 @@
 #ifndef INITIALIZERCLASS_H
 #define INITIALIZERCLASS_H
 #include <algorithm>
+#include "VectorSort.h"
 #include "Common.h"
 #include "ModelBaseClass.h"
 #include "ReadIniFilePackage.h"

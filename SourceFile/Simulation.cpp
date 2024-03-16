@@ -33,8 +33,8 @@ Simulation::~Simulation() {
 	Perform calculations for each number of cars and create results.
 */
 void Simulation::simulate() {
-	CreateNLists();
-	WriteCSVHeaderToCSV();
+	bool&& isFirstSimulation = CreateNLists();
+	WriteCSVHeaderToCSV(isFirstSimulation);
 #ifdef _OPENMP
 #pragma omp parallel for schedule(guided)
 #endif //  _OPENMP
@@ -53,8 +53,8 @@ void Simulation::simulate() {
 				const StatisticsElementsClass* const Global = statistics->Global;
 				for (std::size_t j = 0; j < statistics->Local->size(); j++) {
 					const StatisticsElementsClass* const local = (*statistics->Local)[j];
-					sResultFD << N << "," << local->K << "," << local->Counter << std::endl;
-					sResultLocalVD << N << "," << local->K << "," << Calculate_m_s_To_Km_h(local->AverageVelocity) << std::endl;
+					sResultFD << N << "," << local->K << "," << local->Counter << "," << j + 1 << std::endl;
+					sResultLocalVD << N << "," << local->K << "," << Calculate_m_s_To_Km_h(local->AverageVelocity) << "," << j + 1 << std::endl;
 				}
 				sResultGlovalVD << N << "," << Global->K << "," << Calculate_m_s_To_Km_h(Global->AverageVelocity) << std::endl;
 			}
@@ -84,8 +84,8 @@ void Simulation::simulate() {
 /*
 	A function that creates the NLists excluding those that results have already been created.
 */
-void Simulation::CreateNLists() {
-	isFirstSimulation = true;
+bool  Simulation::CreateNLists() {
+	bool isFirstSimulation = true;
 	std::ifstream ifs(fGlovalVDPath);
 	std::size_t listSize = ModelParameters->NMax;
 	std::vector<bool> NListsFG(listSize, true);
@@ -107,7 +107,8 @@ void Simulation::CreateNLists() {
 			SS >> N >> ch >> val >> ch >> val;
 			NListsFG[N - 1] = false;
 			listSize--;
-			SS.clear();
+			SS.str("");
+			SS.clear(std::stringstream::goodbit);
 		}
 	}
 	ifs.close();
@@ -115,23 +116,24 @@ void Simulation::CreateNLists() {
 	if (listSize > 0) {
 		for (std::size_t i = 0; i < NListsFG.size(); i++) {
 			if (NListsFG[i]) {
-				NLists.emplace_back(i + 1);
+				NLists.emplace_back(int(i + 1));
 			}
 		}
 	}
+	return isFirstSimulation;
 }
 
 /*
 	Write each header to CSV when this is simulated it for the first time.
 */
-void Simulation::WriteCSVHeaderToCSV() {
+void Simulation::WriteCSVHeaderToCSV(const bool& isFirstSimulation) {
 	if (isFirstSimulation) {
 		std::ofstream ofsFD(fFDPath, std::ios::app);
 		std::ofstream ofsGlovalVD(fGlovalVDPath, std::ios::app);
 		std::ofstream ofsLocalVD(fLocalVDPath, std::ios::app);
-		ofsFD << "N,k,Flux" << std::endl;
+		ofsFD << "N,k,Flux,MeasureN" << std::endl;
 		ofsGlovalVD << "N,rho,V" << std::endl;
-		ofsLocalVD << "N,k,V" << std::endl;
+		ofsLocalVD << "N,k,V,MeasureN" << std::endl;
 		ofsFD.close();
 		ofsGlovalVD.close();
 		ofsLocalVD.close();

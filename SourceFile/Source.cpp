@@ -12,9 +12,9 @@ int main(int argc, char *argv[]) {
 	bool CreateSnapShot;	//Whether to create a snapshot of each time step during the measurement period.
 	bool CloseWhenFinished;
 	if (argc == 1) {
-		IniFileNumber = 55;
+		IniFileNumber = 54;
 		RunNumber = 0;
-		CreateSnapShot = false;
+		CreateSnapShot = true;
 		CloseWhenFinished = false;
 	}
 	else {

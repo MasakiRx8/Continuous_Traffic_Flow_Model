@@ -2,7 +2,7 @@
 CXX = g++
 # Specifying compiler options
 # Parallel calculation enabled in the lower row
-#CXXFLAGS = -Wall -Wextra -Wuninitialized -std=c++11
+CXXFLAGS = -Wall -Wextra -Wuninitialized -std=c++11
 #CXXFLAGS = -Wunused -Wuninitialized -std=c++11 -fopenmp
 
 RCXXFLAGS  = $(CXXFLAGS) -O3
@@ -51,17 +51,17 @@ debugclean:
 $(RTARGET): $(ROBJLIST)
 	@echo "$^"
 	@if [ ! -e $(RTARGETDIR) ]; then mkdir -p $(RTARGETDIR); fi
-	$(CXX) -o $(RTARGETDIR)/$@ $^ $(LDFLAGS) $(LIBS)
+	$(CXX) $(RCXXFLAGS) -o $(RTARGETDIR)/$@ $^ $(LDFLAGS)
 
 $(DTARGET): $(DOBJLIST)
 	@echo "$^"
 	@if [ ! -e $(DTARGETDIR) ]; then mkdir -p $(DTARGETDIR); fi
-	$(CXX) -o $(DTARGETDIR)/$@ $^ $(LDFLAGS) $(LIBS)
+	$(CXX) $(DCXXFLAGS) -o $(DTARGETDIR)/$@ $^ $(LDFLAGS)
 
 $(ROBJECTDIR)/%.o: $(SRCROOT)/%.$(EXTENSION)
 	@if [ ! -e `dirname $@` ]; then mkdir -p `dirname $@`; fi
-	$(CXX) $(RCXXFLAGS) $(INCDIR) -o $@ -c $<
+	$(CXX) $(RCXXFLAGS) $(LIBS) $(INCDIR) -o $@ -c $<
 
 $(DOBJECTDIR)/%.o: $(SRCROOT)/%.$(EXTENSION)
 	@if [ ! -e `dirname $@` ]; then mkdir -p `dirname $@`; fi
-	$(CXX) $(DCXXFLAGS) $(INCDIR) -o $@ -c $<
+	$(CXX) $(DCXXFLAGS) $(LIBS) $(INCDIR) -o $@ -c $<

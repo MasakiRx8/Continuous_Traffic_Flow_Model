@@ -25,15 +25,14 @@ private:
 
 	const ModelParametersClass* ModelParameters;				//Model parameters such as road length
 	const StatisticsParametersClass* StatisticsParameters;	//Parameters for measuring results
-	bool isFirstSimulation;
 	std::vector<int> NLists;	//List of number of cars to be calculated
 	//The following is related to result creation.
 	std::string fFDPath;
 	std::string fGlovalVDPath;
 	std::string fLocalVDPath;
 
-	void CreateNLists();		//A function that creates the NLists excluding those that results have already been created.
-	void WriteCSVHeaderToCSV();	//Write each header to CSV when this is simulated it for the first time.
+	bool CreateNLists();		//A function that creates the NLists excluding those that results have already been created.
+	void WriteCSVHeaderToCSV(const bool& isFirstSimulation);	//Write each header to CSV when this is simulated it for the first time.
 	void WriteResultToCSV(const std::stringstream& sResultFD, const std::stringstream& sResultGlovalVD, const std::stringstream& sResultLocalVD);
 };
 
